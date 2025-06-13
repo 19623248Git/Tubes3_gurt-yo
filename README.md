@@ -85,13 +85,33 @@ Tubes3_Stima/
 ## UNIT TESTING
 
 ### TESTING PDF EXTRACT
-testing `src/ExtractCV.py` via root directory
+testing `src/ExtractCV.py` via /test directory
 ```py
-# in root directory of project
-python -m test.ExtractCVTest <pdf path relative to root>
+# in /test
+python ExtractCVTest <pdf path relative to root>
 
 # example
-python -m test.ExtractCVTest data/ACCOUNTANT/10554236.pdf
+python ExtractCVTest ../data/ACCOUNTANT/10554236.pdf
+```
+
+### TESTING DATABASE SEEDER LOCALHOST
+testing `src/Seeder.py` and `src/DirectoryScanner.py` via /test directory
+
+- First set up MySQL server: 
+``` terminal
+mysql -u root -p 
+```
+
+- Set up the Database accordingly to the config file:
+``` terminal
+CREATE DATABASE <database in config file>;
+```
+The test is set to read the config file at config/database.json
+
+- Then run the python program below:
+```py
+# in test
+python SeedingTest.py
 ```
 
 
