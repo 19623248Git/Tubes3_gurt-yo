@@ -34,7 +34,7 @@ class CVAnalyzerApp(QMainWindow):
         top_bar_layout = QHBoxLayout()
         top_bar_layout.addStretch()  # Add spacer to push the button to the right
         self.load_database_button = QPushButton("Load Database")
-        self.load_database_button.setStyleSheet("padding: 10px;")
+        self.load_database_button.setStyleSheet("padding: 1px;")
         top_bar_layout.addWidget(self.load_database_button)
 
         main_layout.addLayout(top_bar_layout)  # Add the top bar layout to the main layout
