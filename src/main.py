@@ -30,6 +30,15 @@ class CVAnalyzerApp(QMainWindow):
         self.setCentralWidget(main_widget)
         main_layout = QVBoxLayout(main_widget)
 
+        ### Load Database Button ###
+        top_bar_layout = QHBoxLayout()
+        top_bar_layout.addStretch()  # Add spacer to push the button to the right
+        self.load_database_button = QPushButton("Load Database")
+        self.load_database_button.setStyleSheet("padding: 10px;")
+        top_bar_layout.addWidget(self.load_database_button)
+
+        main_layout.addLayout(top_bar_layout)  # Add the top bar layout to the main layout
+
         ### Top Search Panel ###
         search_panel = QFrame()
         search_panel.setFrameShape(QFrame.StyledPanel)
@@ -84,6 +93,14 @@ class CVAnalyzerApp(QMainWindow):
 
         # Placeholder for summary window
         self.summary_window = None
+
+        # Load database
+        self.load_database_button.clicked.connect(self.load_database)
+
+    def load_database(self):
+        # Insert load database logic here
+        # Or make a new file idk idc
+        print("Loading database...")
 
         # Connect signals
         self.search_button.clicked.connect(self.perform_search)
