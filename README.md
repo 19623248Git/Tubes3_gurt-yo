@@ -11,15 +11,21 @@ cd Tubes3_Stima
 python -m venv env
 ```
 
-- Activate virtual environtment:
-  - On Windows:
-  ```
-  .\env\Scripts\activate.bat
-  ```
-  - On Linux:
-  ```
-  source env/bin/activate
-  ```
+- Activate the virtual environment:
+  - **On Windows:**
+    - Using Command Prompt:
+      ```cmd
+      .\env\Scripts\activate.bat
+      ```
+    - Using PowerShell:
+      ```powershell
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+      .\env\Scripts\Activate.ps1
+      ```
+  - **On Linux or macOS:**
+    ```bash
+    source env/bin/activate
+    ```
 
 - Install requirements in environtment:
 ```
