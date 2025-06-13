@@ -53,15 +53,15 @@ class SummaryWindow(QWidget):
         main_layout.addWidget(summary_frame)
 
         ### Skills ###
-        skills_frame = self.create_section("Skills:", ["Python", "PySide6", "SQL"])
+        skills_frame = self.create_section("Skills", ["Python", "PySide6", "SQL"])
         main_layout.addWidget(skills_frame)
 
         ### Job History ###
-        job_history_frame = self.create_section("Job History:", ["<b>CTO</b> (2000-2004)<br>Leading the organization's technology strategies"])
+        job_history_frame = self.create_section("Job History", ["<b>CTO</b> (2000-2004)<br>Leading the organization's technology strategies"])
         main_layout.addWidget(job_history_frame)
 
         ### Education History ###
-        education_frame = self.create_section("Education:", ["<b>Informatics Engineering</b> - Institut Teknologi Bandung (2022-2026)"])
+        education_frame = self.create_section("Education", ["<b>Informatics Engineering</b> - Institut Teknologi Bandung (2022-2026)"])
         main_layout.addWidget(education_frame)
 
 
@@ -71,6 +71,10 @@ class SummaryWindow(QWidget):
         layout.setSpacing(5)
 
         title_label = QLabel(f"<b>{title}</b>")
+        font = QFont()
+        font.setPointSize(12)
+        font.setCapitalization(QFont.AllUppercase)
+        title_label.setFont(font)
         layout.addWidget(title_label)
 
         for item_text in items:

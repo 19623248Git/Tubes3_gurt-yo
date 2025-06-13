@@ -96,6 +96,7 @@ class CVAnalyzerApp(QMainWindow):
 
         # Load database
         self.load_database_button.clicked.connect(self.load_database)
+        self.search_button.clicked.connect(self.perform_search)
 
     def load_database(self):
         # Insert load database logic here
@@ -103,7 +104,6 @@ class CVAnalyzerApp(QMainWindow):
         print("Loading database...")
 
         # Connect signals
-        self.search_button.clicked.connect(self.perform_search)
 
     def perform_search(self):
         keywords = self.keywords_input.text()
