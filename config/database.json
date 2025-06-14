@@ -1,7 +1,7 @@
 {
     "host": "localhost",
     "user": "root",
-    "password": "25Nov/2005",
+    "password": "********",
     "port": 3306,
     "database": "Tubes_3_Stima",
     "ssl_disabled": true
