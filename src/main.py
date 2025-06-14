@@ -88,6 +88,13 @@ class CVAnalyzerApp(QMainWindow):
                 background-color: #95a5a6;
                 color: white;
             }
+            QLabel#pathLabel {
+                color: #636e72;
+                font-size: 12px;
+                padding: 5px 10px;
+                background-color: #f1f2f6;
+                border-radius: 3px;
+            }
             QRadioButton {
                 font-size: 14px;
                 spacing: 8px;
@@ -103,6 +110,9 @@ class CVAnalyzerApp(QMainWindow):
             }
         """)
 
+        self.db = None
+        self.config_path = "config/database.json"  # Default config path
+
         # Main widget and layout
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -115,29 +125,37 @@ class CVAnalyzerApp(QMainWindow):
         top_bar_layout = QHBoxLayout(top_bar_frame)
         top_bar_layout.setContentsMargins(20, 10, 20, 10)
         
-        # Database Status
+        # Left side - Status and Path
+        left_layout = QVBoxLayout()
+        
+        # Status Label
         self.status_label = QLabel("No Database Loaded")
         self.status_label.setObjectName("statusLabel")
         self.status_label.setProperty("status", "none")
+        left_layout.addWidget(self.status_label)
+        
+        # Config Path Label
+        self.path_label = QLabel(f"Config: {self.config_path}")
+        self.path_label.setObjectName("pathLabel")
+        left_layout.addWidget(self.path_label)
         
         # Database Controls
         db_controls_layout = QHBoxLayout()
         db_controls_layout.setSpacing(10)
         
+        top_bar_layout.addLayout(left_layout)
+        top_bar_layout.addStretch()
+        
         self.config_button = QPushButton("Set Database Path")
         self.config_button.setFixedWidth(150)
         self.config_button.clicked.connect(self.set_database_path)
-        
         self.load_database_button = QPushButton("Load Database")
         self.load_database_button.setFixedWidth(150)
         self.load_database_button.clicked.connect(self.load_database)
         
-        db_controls_layout.addWidget(self.status_label)
-        db_controls_layout.addStretch()
-        db_controls_layout.addWidget(self.config_button)
-        db_controls_layout.addWidget(self.load_database_button)
+        top_bar_layout.addWidget(self.config_button)
+        top_bar_layout.addWidget(self.load_database_button)
         
-        top_bar_layout.addLayout(db_controls_layout)
         main_layout.addWidget(top_bar_frame)
 
         ### Search Panel ###
@@ -243,13 +261,10 @@ class CVAnalyzerApp(QMainWindow):
         self.results_grid_layout = QVBoxLayout(self.results_container)
         self.results_grid_layout.setContentsMargins(0, 0, 0, 0)
         self.results_grid_layout.setSpacing(15)
-        scroll_area.setWidget(self.results_container)
-
-        # Placeholder for summary window
+        scroll_area.setWidget(self.results_container)        # Placeholder for summary window
         self.summary_window = None
 
-        # Load database
-        self.load_database_button.clicked.connect(self.load_database)
+        # Connect buttons to their handlers (only once)
         self.search_button.clicked.connect(self.perform_search)
 
     def set_database_path(self):
@@ -260,13 +275,14 @@ class CVAnalyzerApp(QMainWindow):
                 "",
                 "JSON Files (*.json)"
             )
-            if file_path:
-                # Update the config path
+            if file_path:                # Update the config path
                 self.config_path = file_path
                 # Test if the config file is valid by trying to load it
                 with open(file_path, 'r') as f:
                     json.load(f)  # This will raise an error if JSON is invalid
                 
+                # Update the path display
+                self.path_label.setText(f"Config: {file_path}")
                 self.status_label.setText("Database Path Updated")
                 self.status_label.setProperty("status", "success")
                 self.status_label.style().unpolish(self.status_label)
