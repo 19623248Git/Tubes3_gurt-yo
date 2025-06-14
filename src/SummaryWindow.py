@@ -21,38 +21,92 @@ class SummaryWindow(QWidget):
     def __init__(self, details):
         super().__init__()
         self.setWindowTitle("CV Summary")
-        self.setGeometry(150, 150, 700, 500)
+        self.setGeometry(150, 150, 800, 700)  # Slightly larger window
+
+        # Set window-wide stylesheet
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f5f6fa;
+            }
+            QFrame {
+                background-color: white;
+                border-radius: 10px;
+                margin: 10px;
+                padding: 20px;
+            }
+            QLabel {
+                color: #2d3436;
+                font-size: 14px;
+            }
+        """)
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
+
+        ### Header ###
+        header_frame = QFrame()
+        header_layout = QVBoxLayout(header_frame)
+        
+        full_name = f"{details.get('first_name', '')} {details.get('last_name', '')}"
+        self.name_label = QLabel(full_name)
+        self.name_label.setStyleSheet("""
+            font-size: 32px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+        """)
+        header_layout.addWidget(self.name_label)
+
+        main_layout.addWidget(header_frame)
 
         ### Information ###
         info_frame = QFrame()
-        info_frame.setFrameShape(QFrame.StyledPanel)
         info_layout = QFormLayout(info_frame)
-
-        full_name = f"{details.get('first_name', '')} {details.get('last_name', '')}"
-
-        self.name_label = QLabel(f"<b>{full_name}</b>")
+        info_layout.setSpacing(12)
+        
+        info_title = QLabel("Personal Information")
+        info_title.setStyleSheet("""
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+        """)
+        info_layout.addRow(info_title)
 
         self.birthdate_label = QLabel(details.get('date_of_birth', 'N/A'))
         self.address_label = QLabel(details.get('address', 'N/A'))
         self.phone_label = QLabel(details.get('phone_number', 'N/A'))
 
-        info_layout.addRow(self.name_label)
-        info_layout.addRow(QLabel("Birthdate:"), self.birthdate_label)
-        info_layout.addRow(QLabel("Address:"), self.address_label)
-        info_layout.addRow(QLabel("Phone:"), self.phone_label)
+        self.birthdate_label.setStyleSheet("color: #636e72;")
+        self.address_label.setStyleSheet("color: #636e72;")
+        self.phone_label.setStyleSheet("color: #636e72;")
+
+        info_layout.addRow(QLabel("<b>Birthdate:</b>"), self.birthdate_label)
+        info_layout.addRow(QLabel("<b>Address:</b>"), self.address_label)
+        info_layout.addRow(QLabel("<b>Phone:</b>"), self.phone_label)
 
         main_layout.addWidget(info_frame)
 
-        # EVERYTHING BELOW HERE ARE DUMMY STATS
         ### Summary ###
         summary_frame = QFrame()
-        summary_frame.setFrameShape(QFrame.StyledPanel)
         summary_layout = QVBoxLayout(summary_frame)
-        summary_label = QLabel("A highly motivated and skilled individual with a passion for technology and innovation.") # Dummy data
+        
+        summary_title = QLabel("Professional Summary")
+        summary_title.setStyleSheet("""
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+        """)
+        summary_layout.addWidget(summary_title)
+        
+        summary_text = "A highly motivated and skilled individual with a passion for technology and innovation."  # Dummy data
+        summary_label = QLabel(summary_text)
         summary_label.setWordWrap(True)
+        summary_label.setStyleSheet("color: #636e72; line-height: 1.5;")
         summary_layout.addWidget(summary_label)
+        
         main_layout.addWidget(summary_frame)
 
         ### Skills ###
@@ -60,29 +114,41 @@ class SummaryWindow(QWidget):
         main_layout.addWidget(skills_frame)
 
         ### Job History ###
-        job_history_frame = self.create_section("Job History", ["<b>CTO</b> (2000-2004)<br>Leading the organization's technology strategies"])
+        job_history_frame = self.create_section(
+            "Professional Experience",
+            ["<b>Chief Technology Officer</b><br>Company Name (2000-2004)<br>• Leading the organization's technology strategies<br>• Managing tech teams and implementing innovative solutions"]
+        )
         main_layout.addWidget(job_history_frame)
 
         ### Education History ###
-        education_frame = self.create_section("Education", ["<b>Informatics Engineering</b> - Institut Teknologi Bandung (2022-2026)"])
+        education_frame = self.create_section(
+            "Education",
+            ["<b>Bachelor of Informatics Engineering</b><br>Institut Teknologi Bandung (2022-2026)<br>• Notable coursework in Software Engineering, Data Structures, and Algorithms"]
+        )
         main_layout.addWidget(education_frame)
-
 
     def create_section(self, title, items):
         frame = QFrame()
         layout = QVBoxLayout(frame)
-        layout.setSpacing(5)
+        layout.setSpacing(12)
 
-        title_label = QLabel(f"<b>{title}</b>")
-        font = QFont()
-        font.setPointSize(12)
-        font.setCapitalization(QFont.AllUppercase)
-        title_label.setFont(font)
+        title_label = QLabel(title)
+        title_label.setStyleSheet("""
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+        """)
         layout.addWidget(title_label)
 
         for item_text in items:
             item_label = QLabel(item_text)
             item_label.setWordWrap(True)
+            item_label.setStyleSheet("""
+                color: #636e72;
+                line-height: 1.5;
+                margin-bottom: 8px;
+            """)
             layout.addWidget(item_label)
 
         return frame
