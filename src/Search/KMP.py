@@ -1,4 +1,4 @@
-from ExtractCV import ExtractCV as ecv
+from src.ExtractCV import ExtractCV as ecv
 
 '''
 KMP (Knuth-Morris-Pratt) class for handling CV text extraction and manipulation.
@@ -51,20 +51,28 @@ class KMP:
                         
 
         # https://www.geeksforgeeks.org/kmp-algorithm-for-pattern-searching/
-        def search(self, cv):
+        def search(self):
                 '''Search for the pattern in the CV text using KMP algorithm.'''
                 text = self.cv.get_cleaned_text()
                 n = len(text)
                 m = len(self.pattern)
                 res = []
 
+                # Warning for empty pattern or text
+                if m == 0:
+                        print(f"Warning: Empty pattern provided")
+                        return res
+                if n == 0:
+                        print(f"Warning: Empty text provided")
+                        return res
+
                 # Pointers i and j, for traversing 
                 # the text and pattern
                 i = 0
                 j = 0
 
-                while(i < n):
-
+                try:
+                    while(i < n):
                         # If the characters match, move both pointers
                         if(self.pattern[j] == text[i]):
                                 i += 1
@@ -84,6 +92,12 @@ class KMP:
                                         j = self.lps[j - 1]
                                 else:
                                         i += 1
+                except IndexError as e:
+                    print(f"IndexError at: text[{i}] (len={n}), pattern[{j}] (len={m})")
+                    print(f"Current text window: '{text[max(0, i-10):min(n, i+10)]}'")
+                    print(f"Pattern: '{self.pattern}'")
+                    raise
+
                 return res
 
 

@@ -1,6 +1,6 @@
-from KMPStrategy import KMPStrategy
-from BMStrategy import BMStrategy
-from FuzzyStrategy import FuzzyStrategy
+from src.Search.KMPStrategy import KMPStrategy
+from src.Search.BMStrategy import BMStrategy
+from src.Search.FuzzyStrategy import FuzzyStrategy
 
 class Search:
         def __init__(self):
@@ -39,6 +39,11 @@ class Search:
 
                 # if no matches found, try fuzzy search first
                 print(f"No matches found for pattern '{pattern}' using Fuzzy Strategy.")
+                
+                # Temporary return statement to avoid errors
+                # if implemented remove this line
+                return 
+        
 
                 result_fuzzy = self.strategies['fuzzy'].search(text, pattern) 
                 if result_fuzzy > 0:

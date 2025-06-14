@@ -1,4 +1,4 @@
-from ExtractCV import ExtractCV as ecv
+from src.ExtractCV import ExtractCV as ecv
 
 NO_OF_CHARS = 256
 
@@ -61,6 +61,14 @@ class BM:
                 n = len(text)
                 m = len(self.pattern)
                 res = []
+
+                # Warning for empty pattern or text
+                if m == 0:
+                        print(f"Warning: Empty pattern provided")
+                        return res
+                if n == 0:
+                        print(f"Warning: Empty text provided")
+                        return res
 
                 s = 0  # shift
                 while s <= n - m:
