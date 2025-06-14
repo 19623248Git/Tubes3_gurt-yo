@@ -36,25 +36,22 @@ def close_connection(conn):
     else:
         print("Connection is already closed.")
 
-def get_applicant_details(conn, name):
+def get_summary_details_by_id(conn, detail_id):
     """
-    Query the database for applicant details by their first name.
-    This function joins the applicantprofile and applicationdetail tables.
+    Fetches all profile and application info for a specific detail_id
+    using a single, efficient JOIN query.
     """
     if not conn or not conn.is_connected():
-        print("Database is not connected.")
         return None
 
-    # The result will be a dictionary to hold the fetched data
-    applicant_data = {}
-    
-    # Use a dictionary cursor to get results as {column_name: value}
-    cursor = conn.cursor(dictionary=True) 
+    details = {}
+    cursor = conn.cursor(dictionary=True)
 
-    # SQL Query to join the tables and get all required info
+    # A single query to get all necessary information
     query = """
     SELECT 
-        p.first_name,
+        p.applicant_id, 
+        p.first_name, 
         p.last_name,
         p.date_of_birth,
         p.address,
@@ -62,41 +59,49 @@ def get_applicant_details(conn, name):
         d.application_role,
         d.cv_path
     FROM 
-        applicantprofile p
+        applicationdetail d
     JOIN 
-        applicationdetail d ON p.applicant_id = d.applicant_id
+        applicantprofile p ON d.applicant_id = p.applicant_id
     WHERE 
-        p.applicant_id = %s
-    LIMIT 1
+        d.detail_id = %s
     """
-
     try:
-        # The (name,) is a tuple containing the parameter for the query
-        cursor.execute(query, (name,))
-        result = cursor.fetchone() # Fetch the first matching record
-        if result:
-            applicant_data = result
-            # Convert date object to a string for display
-            if applicant_data.get('date_of_birth'):
-                applicant_data['date_of_birth'] = applicant_data['date_of_birth'].strftime('%d-%m-%Y')
-
+        cursor.execute(query, (detail_id,))
+        details = cursor.fetchone()
+        if details and details.get('date_of_birth'):
+            details['date_of_birth'] = details['date_of_birth'].strftime('%Y-%m-%d')
+            
     except Error as e:
-        print(f"The error '{e}' occurred")
-    return applicant_data
+        print(f"An error occurred while fetching summary details: {e}")
+    finally:
+        cursor.close()
+
+    return details
 
 def get_all_cv_data(conn):
-    """Fetches the id, name, and CV path for all applicants."""
+    """
+    Fetches all individual APPLICATIONS (not applicants) from the database.
+    Each row represents a unique CV to be searched.
+    """
     if not conn or not conn.is_connected():
-        print("Database is not connected.")
         return []
 
     results = []
     cursor = conn.cursor(dictionary=True)
 
+    # This query joins the tables to get all necessary info for each application
     query = """
-    SELECT p.applicant_id, p.first_name, d.cv_path 
-    FROM applicantprofile p
-    JOIN applicationdetail d ON p.applicant_id = d.applicant_id
+    SELECT 
+        d.detail_id, 
+        p.applicant_id, 
+        p.first_name, 
+        p.last_name,
+        d.application_role,
+        d.cv_path 
+    FROM 
+        applicationdetail d
+    JOIN 
+        applicantprofile p ON d.applicant_id = p.applicant_id
     """
     try:
         cursor.execute(query)

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from SummaryWindow import SummaryWindow 
-from Database import create_connection, close_connection, get_applicant_details, get_all_cv_data
+from Database import create_connection, get_all_cv_data, get_all_cv_data, get_summary_details_by_id
 
 class CVAnalyzerApp(QMainWindow):
     def __init__(self):
@@ -131,24 +131,21 @@ class CVAnalyzerApp(QMainWindow):
         # results = something that returns an array of dictionary. An example can be seen below:
         dummy_results = [
             {
-                "id": 1,
-                "name": "Group1 Applicant1",
+                "detail_id": 1,
+                "applicant_id": 1, 
+                "name": "Group1 Applicant1", 
+                "application_role": "Business Development",
                 "cv_path": "data/BUSINESS-DEVELOPMENT/81310245.pdf",
-                # DUMMY
-                "matched_keywords": {'sales': 4, 'marketing': 2, 'strategy': 1} 
+                "matched_keywords": {'sales': 4, 'marketing': 2}
             },
             {
-                "id": 2,
-                "name": "Group1 Applicant2",
-                "cv_path": "data/ADVOCATE/13809698.pdf",
-                "matched_keywords": {'legal': 5, 'contracts': 3}
-            },
-            {
-                "id": 3,
-                "name": "Group1 Applicant3",
-                "cv_path": "data/ENGINEERING/21847415.pdf",
-                "matched_keywords": {'python': 10, 'java': 5, 'sql': 7, 'react': 2}
-            },
+                "detail_id": 9,
+                "applicant_id": 7, 
+                "name": "Group1 Applicant7",
+                "application_role": "Business Development",
+                "cv_path": "data/BUSINESS-DEVELOPMENT/77576845.pdf",
+                "matched_keywords": {'strategy': 3, 'sales': 2}
+            }
         ]
 
         # Results label
@@ -164,20 +161,24 @@ class CVAnalyzerApp(QMainWindow):
 
         for result in dummy_results:
             card = self.create_cv_card(
-                result["id"],
+                result["detail_id"], # Pass the detail_id
+                result["applicant_id"],
                 result["name"],
+                result["application_role"],
                 result["cv_path"],
                 result["matched_keywords"]
             )
             self.results_grid_layout.addWidget(card)
 
-    def create_cv_card(self, applicant_id, name, cv_path, matched_keywords_data):
+    
+    def create_cv_card(self, detail_id, applicant_id, name, application_role, cv_path, matched_keywords_data):
         card = QFrame()
         card.setFrameShape(QFrame.Box)
         card.setLineWidth(1)
         card_layout = QVBoxLayout(card)
 
         name_label = QLabel(f"<b>{name}</b>")
+        role_label = QLabel(f"{application_role}")
         match_count_label = QLabel(f"{len(matched_keywords_data)} keywords matched")
 
         details_text = []
@@ -190,6 +191,7 @@ class CVAnalyzerApp(QMainWindow):
         keywords_label.setAlignment(Qt.AlignLeft)
 
         card_layout.addWidget(name_label)
+        card_layout.addWidget(role_label)
         card_layout.addWidget(match_count_label)
         card_layout.addWidget(keywords_label)
 
@@ -197,7 +199,7 @@ class CVAnalyzerApp(QMainWindow):
         summary_button = QPushButton("Summary")
         view_cv_button = QPushButton("View CV")
 
-        summary_button.clicked.connect(lambda: self.show_summary(applicant_id))
+        summary_button.clicked.connect(lambda: self.show_summary(detail_id))
         view_cv_button.clicked.connect(lambda: self.view_cv(name, cv_path))
 
         button_layout.addWidget(summary_button)
@@ -206,18 +208,18 @@ class CVAnalyzerApp(QMainWindow):
 
         return card
 
-    def show_summary(self, applicant_id): 
+    def show_summary(self, detail_id): 
         if not self.db_connection:
             self.results_summary_label.setText("Please load the database first.")
             return
             
-        details = get_applicant_details(self.db_connection, applicant_id)
+        details = get_summary_details_by_id(self.db_connection, detail_id)
 
         if details:
             self.summary_window = SummaryWindow(details)
             self.summary_window.show()
         else:
-            print(f"No details found for applicant with ID {applicant_id} in the database.")
+            print(f"No details found for application with Detail ID {detail_id}.")
 
     def view_cv(self, name, cv_path):
         if not os.path.exists(cv_path):
