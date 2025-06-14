@@ -29,7 +29,7 @@ test-search: check-venv
 # Run the main application
 .PHONY: run
 run: check-venv
-	cd src && $(PYTHON) main.py
+	set PYTHONPATH=. && $(PYTHON) src/main.py
 
 # Clean Python cache files
 .PHONY: clean
