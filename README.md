@@ -91,7 +91,7 @@ python main.py
 ## UNIT TESTING
 
 ### TESTING PDF EXTRACT
-testing `src/ExtractCV.py` via /test directory
+testing `src/ExtractCV.py` via `/test` directory
 ```py
 # in /test
 python ExtractCVTest <pdf path relative to root>
@@ -101,7 +101,7 @@ python ExtractCVTest ../data/ACCOUNTANT/10554236.pdf
 ```
 
 ### TESTING DATABASE SEEDER LOCALHOST
-testing `src/Seeder.py` and `src/DirectoryScanner.py` via /test directory
+testing `src/Seeder.py` and `src/DirectoryScanner.py` via `/test` directory
 
 - First set up MySQL server: 
 ``` terminal
