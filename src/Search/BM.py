@@ -1,5 +1,3 @@
-from src.ExtractCV import ExtractCV as ecv
-
 NO_OF_CHARS = 256
 
 '''

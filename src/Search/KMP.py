@@ -1,5 +1,3 @@
-from src.ExtractCV import ExtractCV as ecv
-
 '''
 KMP (Knuth-Morris-Pratt) class for handling CV text extraction and manipulation.
 This class searchs a word matching the string from ExtractCV class
