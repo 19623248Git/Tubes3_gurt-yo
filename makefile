@@ -12,8 +12,8 @@ check-venv:
 	$(PYTHON) check_venv.py
 
 # Test PDF extraction
-.PHONY: test-extract
-test-extract: check-venv
+.PHONY: test-extract-1
+test-extract-1: check-venv
 	$(PYTHON) test/ExtractCVTest.py data/ACCOUNTANT/10554236.pdf
 
 # Test database seeder
