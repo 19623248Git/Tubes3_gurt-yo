@@ -82,19 +82,18 @@ Tubes3_Stima/
 ```
 
 ## RUNNING THE PROGRAM
-Run the program in the src folder with
+In the root directory: 
 ```
-cd src
-python main.py
+make run
 ```
 
 ## UNIT TESTING
 
 ### TESTING PDF EXTRACT
-testing `src/ExtractCV.py` via `/test` directory
-```py
-# in root directory
-python test/ExtractCVTest <pdf path relative to root>
+testing `src/ExtractCV.py` with makefile:
+```
+make test-extract-1
+```
 
 # example
 python test/ExtractCVTest data/ACCOUNTANT/10554236.pdf
@@ -114,18 +113,15 @@ CREATE DATABASE <database in config file>;
 ```
 The test is set to read the config file at config/database.json
 
-- Then run the python program below:
-```py
-# in root directory
-python test/SeedingTest.py
+- Then run the makefile as below:
+```
+make test-seeder
 ```
 
 ### TESTING SEARCH STRATEGY
-testing `src/Search` files via `/test` directory
-
-```py
-# in root directory
-python test/SearchTest.py
+testing `src/Search` files with makefile:
+```
+make test-search
 ```
 
 
