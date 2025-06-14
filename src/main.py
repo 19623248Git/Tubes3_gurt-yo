@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import json
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -15,6 +16,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QRadioButton,
     QSpinBox,
+    QFileDialog,  # Add this import
+    QMessageBox,  # Add this import
 )
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
@@ -27,7 +30,9 @@ class CVAnalyzerApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gurt:Yo CV Analyzer")
-        self.setGeometry(100, 100, 1000, 700)  # Slightly larger window
+        self.setGeometry(100, 100, 1000, 700)
+        self.db = None
+        self.config_path = "config/database.json"  # Default config path
 
         # Set application-wide stylesheet
         self.setStyleSheet("""
@@ -66,6 +71,23 @@ class CVAnalyzerApp(QMainWindow):
                 color: #2d3436;
                 font-size: 14px;
             }
+            QLabel#statusLabel {
+                padding: 8px 15px;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            QLabel#statusLabel[status="success"] {
+                background-color: #27ae60;
+                color: white;
+            }
+            QLabel#statusLabel[status="error"] {
+                background-color: #e74c3c;
+                color: white;
+            }
+            QLabel#statusLabel[status="none"] {
+                background-color: #95a5a6;
+                color: white;
+            }
             QRadioButton {
                 font-size: 14px;
                 spacing: 8px;
@@ -81,8 +103,6 @@ class CVAnalyzerApp(QMainWindow):
             }
         """)
 
-        self.db = None
-
         # Main widget and layout
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -90,15 +110,37 @@ class CVAnalyzerApp(QMainWindow):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
 
-        ### Load Database Button ###
-        top_bar_layout = QHBoxLayout()
-        top_bar_layout.addStretch()
+        ### Top Bar with Database Controls ###
+        top_bar_frame = QFrame()
+        top_bar_layout = QHBoxLayout(top_bar_frame)
+        top_bar_layout.setContentsMargins(20, 10, 20, 10)
+        
+        # Database Status
+        self.status_label = QLabel("No Database Loaded")
+        self.status_label.setObjectName("statusLabel")
+        self.status_label.setProperty("status", "none")
+        
+        # Database Controls
+        db_controls_layout = QHBoxLayout()
+        db_controls_layout.setSpacing(10)
+        
+        self.config_button = QPushButton("Set Database Path")
+        self.config_button.setFixedWidth(150)
+        self.config_button.clicked.connect(self.set_database_path)
+        
         self.load_database_button = QPushButton("Load Database")
         self.load_database_button.setFixedWidth(150)
-        top_bar_layout.addWidget(self.load_database_button)
-        main_layout.addLayout(top_bar_layout)
+        self.load_database_button.clicked.connect(self.load_database)
+        
+        db_controls_layout.addWidget(self.status_label)
+        db_controls_layout.addStretch()
+        db_controls_layout.addWidget(self.config_button)
+        db_controls_layout.addWidget(self.load_database_button)
+        
+        top_bar_layout.addLayout(db_controls_layout)
+        main_layout.addWidget(top_bar_frame)
 
-        ### Top Search Panel ###
+        ### Search Panel ###
         search_panel = QFrame()
         search_panel.setStyleSheet("""
             QFrame {
@@ -210,16 +252,61 @@ class CVAnalyzerApp(QMainWindow):
         self.load_database_button.clicked.connect(self.load_database)
         self.search_button.clicked.connect(self.perform_search)
 
+    def set_database_path(self):
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Select Database Configuration File",
+                "",
+                "JSON Files (*.json)"
+            )
+            if file_path:
+                # Update the config path
+                self.config_path = file_path
+                # Test if the config file is valid by trying to load it
+                with open(file_path, 'r') as f:
+                    json.load(f)  # This will raise an error if JSON is invalid
+                
+                self.status_label.setText("Database Path Updated")
+                self.status_label.setProperty("status", "success")
+                self.status_label.style().unpolish(self.status_label)
+                self.status_label.style().polish(self.status_label)
+                QMessageBox.information(self, "Success", "Database configuration path updated successfully!")
+        except json.JSONDecodeError:
+            self.status_label.setText("Invalid Config File")
+            self.status_label.setProperty("status", "error")
+            self.status_label.style().unpolish(self.status_label)
+            self.status_label.style().polish(self.status_label)
+            QMessageBox.critical(self, "Error", "The selected file is not a valid JSON configuration file.")
+        except Exception as e:
+            self.status_label.setText("Failed to Set Path")
+            self.status_label.setProperty("status", "error")
+            self.status_label.style().unpolish(self.status_label)
+            self.status_label.style().polish(self.status_label)
+            QMessageBox.critical(self, "Error", f"Failed to update database path: {str(e)}")
+
     def load_database(self):
-        if self.db is None:
-            self.db = Database("config/database.json")
+        try:
+            # Create new database instance with current config path
+            self.db = Database(self.config_path)
+            
+            # Try to establish connection
             if self.db.create_connection():
-                self.load_database_button.setEnabled(False) # Disable button after successful connection
-                self.load_database_button.setText("Database Connected")
-                self.search_button.setEnabled(True) # Enable search
-                self.results_summary_label.setText("Database connected. Ready to search.")
+                self.status_label.setText("Database Connected")
+                self.status_label.setProperty("status", "success")
+                self.status_label.style().unpolish(self.status_label)
+                self.status_label.style().polish(self.status_label)
+                self.search_button.setEnabled(True)
+                QMessageBox.information(self, "Success", "Database loaded and connected successfully!")
             else:
-                self.results_summary_label.setText("Database connection failed. Check credentials/server.")
+                raise Exception("Failed to establish database connection")
+        except Exception as e:
+            self.status_label.setText("Failed to Load")
+            self.status_label.setProperty("status", "error")
+            self.status_label.style().unpolish(self.status_label)
+            self.status_label.style().polish(self.status_label)
+            self.search_button.setEnabled(False)
+            QMessageBox.critical(self, "Error", f"Failed to load database: {str(e)}")
 
     def perform_search(self):
         ## Clear Cards ##
