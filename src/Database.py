@@ -18,6 +18,15 @@ class Database:
         except KeyError as e:
             print(f"Error: The key {e} is missing from the database.json file.")
             raise
+    
+    def set_path_config(self, config_path: str):
+        """Set the path to the database configuration file."""
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Configuration file not found at {config_path}")
+        
+        with open(config_path, 'r') as f:
+            self.credentials = json.load(f)
+        print("Database credentials updated successfully")
 
     def create_connection(self):
         """Create a connection to the database."""
