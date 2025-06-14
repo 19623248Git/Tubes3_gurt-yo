@@ -38,13 +38,13 @@ class ExtractCV:
                 self.raw_text = full_text
 
         def to_continuous_string(self):
-                # Convert text to a lowercase string with no punctuation or spaces
+                # Convert text to a lowercase string with no punctuation but preserve spaces between words
                 if not self.raw_text:
                         self.extract_all_text()
                 # Remove all punctuation using regex
                 text = re.sub(r'[^\w\s]', '', self.raw_text)
-                # Remove all whitespace characters and convert to lowercase
-                cleaned = re.sub(r'\s+', '', text).lower()
+                # Replace multiple whitespace characters with a single space and convert to lowercase
+                cleaned = re.sub(r'\s+', ' ', text).lower().strip()
                 self.cleaned_text = cleaned
 
         
@@ -52,6 +52,6 @@ class ExtractCV:
                 # Convert the PDF to a continuous string
                 self.extract_all_text()
                 self.to_continuous_string()
-        
+
 
 
