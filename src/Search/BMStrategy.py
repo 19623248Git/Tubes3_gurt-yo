@@ -1,5 +1,5 @@
-from src.Search.SearchStrategy import SearchStrategy
-from src.Search.BM import BM
+from Search.SearchStrategy import SearchStrategy
+from Search.BM import BM
 
 """
 Implementation of the SearchStrategy interface using the BM algorithm.

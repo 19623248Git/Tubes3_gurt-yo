@@ -1,4 +1,4 @@
-from src.ExtractCV import ExtractCV as ecv
+from ExtractCV import ExtractCV as ecv
 
 '''
 KMP (Knuth-Morris-Pratt) class for handling CV text extraction and manipulation.

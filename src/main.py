@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -19,6 +20,8 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from SummaryWindow import SummaryWindow 
 from Database import create_connection, get_all_cv_data, get_all_cv_data, get_summary_details_by_id
+from ExtractCV import ExtractCV
+from Search.Search import Search
 
 class CVAnalyzerApp(QMainWindow):
     def __init__(self):
@@ -115,51 +118,75 @@ class CVAnalyzerApp(QMainWindow):
             self.results_summary_label.setText("Database connection failed. Check credentials/server.")
 
     def perform_search(self):
-        keywords = self.keywords_input.text()
-        algorithm = "KMP" if self.kmp_radio.isChecked() else "BM"
+        ## Clear Cards ##
+        for i in reversed(range(self.results_grid_layout.count())):
+            widget = self.results_grid_layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
+
+        keywords_text = self.keywords_input.text()
+        if not keywords_text:
+            self.results_summary_label.setText("Please enter at least one keyword.")
+            return
+        keywords = [kw.strip().lower() for kw in keywords_text.split(',') if kw.strip()]
+        algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
         top_n = self.top_matches_spinbox.value()
 
         if not self.db_connection:
             self.results_summary_label.setText("Please load the database first.")
             return
         
-        all_cvs = get_all_cv_data(self.db_connection)
-        print(f"Found {len(all_cvs)} CVs to search through.")
+        self.results_summary_label.setText(f"Searching {algorithm.upper()} for '{keywords}'...")
+        QApplication.processEvents() # Allow GUI to update
 
-        print(f"Searching for '{keywords}' using {algorithm}, showing top {top_n} matches.")
-        # Insert Backend Logic Here?
-        # results = something that returns an array of dictionary. An example can be seen below:
-        dummy_results = [
-            {
-                "detail_id": 1,
-                "applicant_id": 1, 
-                "name": "Group1 Applicant1", 
-                "application_role": "Business Development",
-                "cv_path": "../data/BUSINESS-DEVELOPMENT/81310245.pdf",
-                "matched_keywords": {'sales': 4, 'marketing': 2}
-            },
-            {
-                "detail_id": 9,
-                "applicant_id": 7, 
-                "name": "Group1 Applicant7",
-                "application_role": "Business Development",
-                "cv_path": "../data/BUSINESS-DEVELOPMENT/77576845.pdf",
-                "matched_keywords": {'strategy': 3, 'sales': 2}
-            }
-        ]
+        start_time = time.time()
+        search_engine = Search()
+        all_applications = get_all_cv_data(self.db_connection)
+        results = []
+        
+        for app_data in all_applications:
+            cv_path = app_data['cv_path']
+            cv_extractor = ExtractCV(cv_path) 
+            
+            matched_keywords = {}
+            for keyword in keywords:
+                count = search_engine._search(algorithm, cv_extractor, keyword)
+                if count > 0:
+                    matched_keywords[keyword] = count
+            
+            if matched_keywords:
+                result_entry = {
+                    "detail_id": app_data['detail_id'],
+                    "applicant_id": app_data['applicant_id'],
+                    "name": f"{app_data['first_name']} {app_data['last_name']}",
+                    "application_role": app_data['application_role'],
+                    "cv_path": cv_path,
+                    "matched_keywords": matched_keywords
+                }
+                results.append(result_entry)
+        
+        runtime_ms = (time.time() - start_time) * 1000
 
-        # Results label
-        # self.results_summary_label.setText("Exact Match: {amtOfScannedExactCVs} CVs ({runtime}ms).\nFuzzy Match: {amtOfScannedFuzzyCVs} CVs ({runtime}ms)")
-        # E.g.
-        self.results_summary_label.setText("Exact Match: 3 CVs (150ms).\nFuzzy Match: 2 CVs (200ms)")
+        # Sort results and get top N
+        results.sort(key=lambda x: sum(x['matched_keywords'].values()), reverse=True)
+        final_results = results[:top_n]
+        
+        self.results_summary_label.setText(
+            f"Exact Match: Scanned {len(all_applications)} CVs in {runtime_ms:.2f} ms. Found {len(results)} relevant CV(s)."
+        )
+        ## Input Fuzzy match results here
 
         # Clear previous results
         for i in reversed(range(self.results_grid_layout.count())):
             widget = self.results_grid_layout.itemAt(i).widget()
             if widget:
                 widget.setParent(None)
+        
+        if not final_results:
+            self.results_summary_label.setText("No matches found.")
+            return
 
-        for result in dummy_results:
+        for result in final_results:
             card = self.create_cv_card(
                 result["detail_id"], # Pass the detail_id
                 result["applicant_id"],

@@ -1,5 +1,5 @@
-from src.Search.SearchStrategy import SearchStrategy
-from src.Search.KMP import KMP
+from Search.SearchStrategy import SearchStrategy
+from Search.KMP import KMP
 
 """
 Implementation of the SearchStrategy interface using the KMP algorithm.
