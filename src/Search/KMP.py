@@ -51,7 +51,7 @@ class KMP:
                         
 
         # https://www.geeksforgeeks.org/kmp-algorithm-for-pattern-searching/
-        def search(self):
+        def search(self, cv):
                 '''Search for the pattern in the CV text using KMP algorithm.'''
                 text = self.cv.get_cleaned_text()
                 n = len(text)
