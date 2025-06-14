@@ -120,5 +120,12 @@ The test is set to read the config file at config/database.json
 python SeedingTest.py
 ```
 
+### TESTING SEARCH STRATEGY
+testing `src/Search` files via `/test` directory
+
+```py
+# in /test
+python SearchTest.py
+```
 
 
