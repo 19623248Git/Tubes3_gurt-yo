@@ -42,7 +42,7 @@ class Search:
                 
                 # Temporary return statement to avoid errors
                 # if implemented remove this line
-                return 
+                return -2
         
 
                 result_fuzzy = self.strategies['fuzzy'].search(text, pattern) 
