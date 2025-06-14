@@ -33,6 +33,7 @@ class CVAnalyzerApp(QMainWindow):
         self.setGeometry(100, 100, 1000, 700)
         self.db = None
         self.config_path = "config/database.json"  # Default config path
+        self.search_engine = Search()  # Create search engine once
 
         # Set application-wide stylesheet
         self.setStyleSheet("""
@@ -347,7 +348,6 @@ class CVAnalyzerApp(QMainWindow):
         QApplication.processEvents() # Allow GUI to update
 
         start_time = time.time()
-        search_engine = Search()
         all_applications = self.db.get_all_cv_data()
         results = []
         
@@ -357,7 +357,7 @@ class CVAnalyzerApp(QMainWindow):
             
             matched_keywords = {}
             for keyword in keywords:
-                count = search_engine._search(algorithm, cv_extractor, keyword)
+                count = self.search_engine._search(algorithm, cv_extractor, keyword)
                 if count > 0:
                     matched_keywords[keyword] = count
             
