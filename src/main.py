@@ -135,7 +135,7 @@ class CVAnalyzerApp(QMainWindow):
                 "applicant_id": 1, 
                 "name": "Group1 Applicant1", 
                 "application_role": "Business Development",
-                "cv_path": "data/BUSINESS-DEVELOPMENT/81310245.pdf",
+                "cv_path": "../data/BUSINESS-DEVELOPMENT/81310245.pdf",
                 "matched_keywords": {'sales': 4, 'marketing': 2}
             },
             {
@@ -143,7 +143,7 @@ class CVAnalyzerApp(QMainWindow):
                 "applicant_id": 7, 
                 "name": "Group1 Applicant7",
                 "application_role": "Business Development",
-                "cv_path": "data/BUSINESS-DEVELOPMENT/77576845.pdf",
+                "cv_path": "../data/BUSINESS-DEVELOPMENT/77576845.pdf",
                 "matched_keywords": {'strategy': 3, 'sales': 2}
             }
         ]

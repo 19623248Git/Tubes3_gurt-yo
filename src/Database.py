@@ -6,7 +6,7 @@ import os
 def create_connection():
     conn = None
     try:
-        file_path = 'config/database.json'
+        file_path = '../config/database.json'
 
         with open(file_path, 'r') as f:
             credentials = json.load(f)

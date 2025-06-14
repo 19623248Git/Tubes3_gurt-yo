@@ -82,9 +82,10 @@ Tubes3_Stima/
 ```
 
 ## RUNNING THE PROGRAM
-Run the program from the root folder with
+Run the program in the src folder with
 ```
-python src/main.py
+cd src
+python main.py
 ```
 
 ## UNIT TESTING
