@@ -1,21 +1,31 @@
 import mysql.connector
 from mysql.connector import Error
+import json
+import os
 
 def create_connection():
-    """Create a database connection to the MariaDB database."""
     conn = None
     try:
-        # --- IMPORTANT ---
-        # Replace these values with your actual database credentials
+        file_path = 'config/database.json'
+
+        with open(file_path, 'r') as f:
+            credentials = json.load(f)
+
         conn = mysql.connector.connect(
-            host="localhost",
-            user="root",      # e.g., 'root'
-            password="",
-            database="tubes_3_stima"
+            host=credentials['host'],
+            user=credentials['user'],
+            password=credentials['password'],
+            database=credentials['database']
         )
         print("Database connection successful")
+
+    except FileNotFoundError:
+        print(f"Error: The credentials file was not found at {file_path}")
+    except KeyError as e:
+        print(f"Error: The key {e} is missing from the database.json file.")
     except Error as e:
-        print(f"The error '{e}' occurred")
+        print(f"Database Error: '{e}' occurred")
+    
     return conn
 
 def close_connection(conn):
@@ -42,8 +52,6 @@ def get_applicant_details(conn, name):
     cursor = conn.cursor(dictionary=True) 
 
     # SQL Query to join the tables and get all required info
-    # The project spec shows a one-to-many relationship, so we will
-    # fetch the first matching application detail for simplicity.
     query = """
     SELECT 
         p.first_name,
@@ -76,7 +84,6 @@ def get_applicant_details(conn, name):
         print(f"The error '{e}' occurred")
     return applicant_data
 
-# You will also need a function to get all CVs for the search logic later
 def get_all_cv_data(conn):
     """Fetches the id, name, and CV path for all applicants."""
     if not conn or not conn.is_connected():
@@ -86,7 +93,6 @@ def get_all_cv_data(conn):
     results = []
     cursor = conn.cursor(dictionary=True)
 
-    # MODIFIED: Select the applicant_id as well
     query = """
     SELECT p.applicant_id, p.first_name, d.cv_path 
     FROM applicantprofile p

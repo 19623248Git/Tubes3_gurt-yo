@@ -103,10 +103,6 @@ class CVAnalyzerApp(QMainWindow):
         self.search_button.clicked.connect(self.perform_search)
 
     def load_database(self):
-        """
-        Method called by the 'Load Database' button.
-        Establishes connection and enables UI elements.
-        """
         if self.db_connection is None:
             self.db_connection = create_connection()
 
@@ -215,11 +211,9 @@ class CVAnalyzerApp(QMainWindow):
             self.results_summary_label.setText("Please load the database first.")
             return
             
-        # Pass the unique ID to the database function
         details = get_applicant_details(self.db_connection, applicant_id)
 
         if details:
-            # The SummaryWindow now receives details for the correct person
             self.summary_window = SummaryWindow(details)
             self.summary_window.show()
         else:
