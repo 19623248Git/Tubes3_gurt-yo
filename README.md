@@ -81,6 +81,12 @@ Tubes3_Stima/
 └── README.md                      # Project documentation (this file)
 ```
 
+## RUNNING THE PROGRAM
+Run the program in the src folder with
+```
+cd src
+python main.py
+```
 
 ## UNIT TESTING
 
