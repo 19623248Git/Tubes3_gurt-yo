@@ -6,8 +6,8 @@ from src.Seeder import Seeder
 from mysql.connector import Error
 
 def test_database_connection():
-    base_dir = '../data'
-    config_path = '../config/database.json'
+    base_dir = 'data'
+    config_path = 'config/database.json'
     seeder = None
     
     try:
@@ -44,8 +44,8 @@ def test_seeder():
         return False
 
     # Test initialization and database connection
-    base_dir = '../data'
-    config_path = '../config/database.json'
+    base_dir = 'data'
+    config_path = 'config/database.json'
     
     try:
         # Initialize seeder
