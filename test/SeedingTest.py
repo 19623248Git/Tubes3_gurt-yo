@@ -1,4 +1,3 @@
-# filepath: c:\Users\Nathan Jovial\Documents\GitHub\Tubes3_Stima\test\SeedingTest.py
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

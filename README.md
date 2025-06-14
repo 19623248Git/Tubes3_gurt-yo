@@ -93,11 +93,11 @@ python main.py
 ### TESTING PDF EXTRACT
 testing `src/ExtractCV.py` via `/test` directory
 ```py
-# in /test
-python ExtractCVTest <pdf path relative to root>
+# in root directory
+python test/ExtractCVTest <pdf path relative to root>
 
 # example
-python ExtractCVTest ../data/ACCOUNTANT/10554236.pdf
+python test/ExtractCVTest data/ACCOUNTANT/10554236.pdf
 ```
 
 ### TESTING DATABASE SEEDER LOCALHOST
@@ -116,16 +116,16 @@ The test is set to read the config file at config/database.json
 
 - Then run the python program below:
 ```py
-# in test
-python SeedingTest.py
+# in root directory
+python test/SeedingTest.py
 ```
 
 ### TESTING SEARCH STRATEGY
 testing `src/Search` files via `/test` directory
 
 ```py
-# in /test
-python SearchTest.py
+# in root directory
+python test/SearchTest.py
 ```
 
 

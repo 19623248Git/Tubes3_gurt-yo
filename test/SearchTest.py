@@ -5,7 +5,7 @@ import io
 import re
 import contextlib
 
-# Ensure the source directory is in the path
+# Add the root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.Search.Search import Search
@@ -139,7 +139,7 @@ def print_assertion(condition_str):
 # ======================================================================
 def test_search_algorithms_consistency():
     search_engine = Search()
-    test_text = ExtractCV("../data/ACCOUNTANT/10554236.pdf")
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
     result_kmp = search_engine._search('kmp', test_text, "accountant")
     result_bm = search_engine._search('bm', test_text, "accountant")
     
@@ -157,7 +157,7 @@ def test_search_algorithms_consistency():
 # ======================================================================
 def test_non_existent_word_search():
     search_engine = Search()
-    test_text = ExtractCV("../data/ACCOUNTANT/10554236.pdf")
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
     result_nonexistent = search_engine._search('kmp', test_text, "xyzabc123")
     print(f"Search for 'xyzabc123' returned: {result_nonexistent}")
     
@@ -173,7 +173,7 @@ def test_non_existent_word_search():
 # ======================================================================
 def test_invalid_strategy_handling():
     search_engine = Search()
-    test_text = ExtractCV("../data/ACCOUNTANT/10554236.pdf")
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
     result_invalid = search_engine._search('invalid_strategy', test_text, "test")
     
     print_assertion("result_invalid == -1")
@@ -184,7 +184,7 @@ def test_invalid_strategy_handling():
 # ======================================================================
 def test_various_patterns_for_consistency():
     search_engine = Search()
-    test_text = ExtractCV("../data/ACCOUNTANT/10554236.pdf")
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
     test_patterns = ["experience", "skills", "education", "management", "", "a"]
     print("Testing consistency for multiple patterns...")
     for pattern in test_patterns:
