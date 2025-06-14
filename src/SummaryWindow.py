@@ -18,7 +18,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 
 class SummaryWindow(QWidget):
-    def __init__(self, applicant_name):
+    def __init__(self, details):
         super().__init__()
         self.setWindowTitle("CV Summary")
         self.setGeometry(150, 150, 700, 500)
@@ -26,15 +26,17 @@ class SummaryWindow(QWidget):
         main_layout = QVBoxLayout(self)
 
         ### Information ###
-        # EVERYTHING HERE ARE ALL DUMMY DATAS
         info_frame = QFrame()
         info_frame.setFrameShape(QFrame.StyledPanel)
         info_layout = QFormLayout(info_frame)
 
-        self.name_label = QLabel(f"<b>{applicant_name}</b>")
-        self.birthdate_label = QLabel("07-03-2005") # Dummy data
-        self.address_label = QLabel("Labtek V") # Dummy data
-        self.phone_label = QLabel("0812 3456 7890") # Dummy data
+        full_name = f"{details.get('first_name', '')} {details.get('last_name', '')}"
+
+        self.name_label = QLabel(f"<b>{full_name}</b>")
+
+        self.birthdate_label = QLabel(details.get('date_of_birth', 'N/A'))
+        self.address_label = QLabel(details.get('address', 'N/A'))
+        self.phone_label = QLabel(details.get('phone_number', 'N/A'))
 
         info_layout.addRow(self.name_label)
         info_layout.addRow(QLabel("Birthdate:"), self.birthdate_label)
@@ -43,6 +45,7 @@ class SummaryWindow(QWidget):
 
         main_layout.addWidget(info_frame)
 
+        # EVERYTHING BELOW HERE ARE DUMMY STATS
         ### Summary ###
         summary_frame = QFrame()
         summary_frame.setFrameShape(QFrame.StyledPanel)

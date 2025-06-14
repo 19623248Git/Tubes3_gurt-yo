@@ -18,12 +18,15 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from SummaryWindow import SummaryWindow 
+from Database import create_connection, close_connection, get_applicant_details, get_all_cv_data
 
 class CVAnalyzerApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gurt:Yo CV Analyzer")
         self.setGeometry(100, 100, 800, 600)
+
+        self.db_connection = None
 
         # Main widget and layout
         main_widget = QWidget()
@@ -67,6 +70,7 @@ class CVAnalyzerApp(QMainWindow):
 
         # Search Button
         self.search_button = QPushButton("Search")
+        self.search_button.setEnabled(False) 
         self.search_button.setStyleSheet("padding: 10px;")
         search_layout.addRow(self.search_button)
 
@@ -99,36 +103,56 @@ class CVAnalyzerApp(QMainWindow):
         self.search_button.clicked.connect(self.perform_search)
 
     def load_database(self):
-        # Insert load database logic here
-        # Or make a new file idk idc
-        print("Loading database...")
+        """
+        Method called by the 'Load Database' button.
+        Establishes connection and enables UI elements.
+        """
+        if self.db_connection is None:
+            self.db_connection = create_connection()
 
-        # Connect signals
+        if self.db_connection and self.db_connection.is_connected():
+            self.load_database_button.setEnabled(False) # Disable button after successful connection
+            self.load_database_button.setText("Database Connected")
+            self.search_button.setEnabled(True) # Enable search
+            self.results_summary_label.setText("Database connected. Ready to search.")
+        else:
+            self.results_summary_label.setText("Database connection failed. Check credentials/server.")
 
     def perform_search(self):
         keywords = self.keywords_input.text()
         algorithm = "KMP" if self.kmp_radio.isChecked() else "BM"
         top_n = self.top_matches_spinbox.value()
 
+        if not self.db_connection:
+            self.results_summary_label.setText("Please load the database first.")
+            return
+        
+        all_cvs = get_all_cv_data(self.db_connection)
+        print(f"Found {len(all_cvs)} CVs to search through.")
+
         print(f"Searching for '{keywords}' using {algorithm}, showing top {top_n} matches.")
         # Insert Backend Logic Here?
         # results = something that returns an array of dictionary. An example can be seen below:
         dummy_results = [
-        {
-            "name": "Ian",
-            "total_matches": 4, # You can calculate this in the backend or frontend
-            "matched_keywords": {'React': 1, 'Express': 2, 'HTML': 1}
-        },
-        {
-            "name": "Jovi",
-            "total_matches": 1,
-            "matched_keywords": {'React': 1}
-        },
-        {
-            "name": "Karol",
-            "total_matches": 1,
-            "matched_keywords": {'Express': 1}
-        },
+            {
+                "id": 1,
+                "name": "Group1 Applicant1",
+                "cv_path": "data/BUSINESS-DEVELOPMENT/81310245.pdf",
+                # DUMMY
+                "matched_keywords": {'sales': 4, 'marketing': 2, 'strategy': 1} 
+            },
+            {
+                "id": 2,
+                "name": "Group1 Applicant2",
+                "cv_path": "data/ADVOCATE/13809698.pdf",
+                "matched_keywords": {'legal': 5, 'contracts': 3}
+            },
+            {
+                "id": 3,
+                "name": "Group1 Applicant3",
+                "cv_path": "data/ENGINEERING/21847415.pdf",
+                "matched_keywords": {'python': 10, 'java': 5, 'sql': 7, 'react': 2}
+            },
         ]
 
         # Results label
@@ -138,24 +162,25 @@ class CVAnalyzerApp(QMainWindow):
 
         # Clear previous results
         for i in reversed(range(self.results_grid_layout.count())):
-            self.results_grid_layout.itemAt(i).widget().setParent(None)
+            widget = self.results_grid_layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
 
         for result in dummy_results:
-            # Pass the structured data to the card creation method
             card = self.create_cv_card(
+                result["id"],
                 result["name"],
-                result["total_matches"],
+                result["cv_path"],
                 result["matched_keywords"]
             )
             self.results_grid_layout.addWidget(card)
 
-    def create_cv_card(self, name, total_matches, matched_keywords_data):
+    def create_cv_card(self, applicant_id, name, cv_path, matched_keywords_data):
         card = QFrame()
         card.setFrameShape(QFrame.Box)
         card.setLineWidth(1)
         card_layout = QVBoxLayout(card)
 
-        ### Card Content ###
         name_label = QLabel(f"<b>{name}</b>")
         match_count_label = QLabel(f"{len(matched_keywords_data)} keywords matched")
 
@@ -165,7 +190,6 @@ class CVAnalyzerApp(QMainWindow):
             occurrence_str = "occurrence" if count == 1 else "occurrences"
             details_text.append(f"{i}. {keyword}: {count} {occurrence_str}")
             i += 1
-
         keywords_label = QLabel("\n".join(details_text))
         keywords_label.setAlignment(Qt.AlignLeft)
 
@@ -173,12 +197,12 @@ class CVAnalyzerApp(QMainWindow):
         card_layout.addWidget(match_count_label)
         card_layout.addWidget(keywords_label)
 
-        # Action Buttons
         button_layout = QHBoxLayout()
         summary_button = QPushButton("Summary")
         view_cv_button = QPushButton("View CV")
 
-        summary_button.clicked.connect(lambda: self.show_summary(name))
+        summary_button.clicked.connect(lambda: self.show_summary(applicant_id))
+        view_cv_button.clicked.connect(lambda: self.view_cv(name, cv_path))
 
         button_layout.addWidget(summary_button)
         button_layout.addWidget(view_cv_button)
@@ -186,16 +210,32 @@ class CVAnalyzerApp(QMainWindow):
 
         return card
 
-    def show_summary(self, applicant_name): # This will open the summary window for the selected applicant
-        self.summary_window = SummaryWindow(applicant_name)
-        self.summary_window.show()
+    def show_summary(self, applicant_id): 
+        if not self.db_connection:
+            self.results_summary_label.setText("Please load the database first.")
+            return
+            
+        # Pass the unique ID to the database function
+        details = get_applicant_details(self.db_connection, applicant_id)
 
-    def view_cv(self, applicant_name, file_path):
+        if details:
+            # The SummaryWindow now receives details for the correct person
+            self.summary_window = SummaryWindow(details)
+            self.summary_window.show()
+        else:
+            print(f"No details found for applicant with ID {applicant_id} in the database.")
+
+    def view_cv(self, name, cv_path):
+        if not os.path.exists(cv_path):
+            self.results_summary_label.setText(f"CV file not found: {cv_path}")
+            return
+
+        # Open the CV file using the default application
         try:
-            os.startfile(file_path)
+            absolute_path = os.path.abspath(cv_path)
+            os.startfile(absolute_path)  # For Windows
         except Exception as e:
-            print(f"Failed to open CV for {applicant_name}: {e}")
-
+            self.results_summary_label.setText(f"Error opening CV: {str(e)}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
