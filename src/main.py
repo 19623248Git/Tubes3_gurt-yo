@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from SummaryWindow import SummaryWindow 
-from Database import create_connection, get_all_cv_data, get_all_cv_data, get_summary_details_by_id
+from Database import Database
 from ExtractCV import ExtractCV
 from Search.Search import Search
 
@@ -29,7 +29,7 @@ class CVAnalyzerApp(QMainWindow):
         self.setWindowTitle("Gurt:Yo CV Analyzer")
         self.setGeometry(100, 100, 800, 600)
 
-        self.db_connection = None
+        self.db = None
 
         # Main widget and layout
         main_widget = QWidget()
@@ -106,16 +106,15 @@ class CVAnalyzerApp(QMainWindow):
         self.search_button.clicked.connect(self.perform_search)
 
     def load_database(self):
-        if self.db_connection is None:
-            self.db_connection = create_connection()
-
-        if self.db_connection and self.db_connection.is_connected():
-            self.load_database_button.setEnabled(False) # Disable button after successful connection
-            self.load_database_button.setText("Database Connected")
-            self.search_button.setEnabled(True) # Enable search
-            self.results_summary_label.setText("Database connected. Ready to search.")
-        else:
-            self.results_summary_label.setText("Database connection failed. Check credentials/server.")
+        if self.db is None:
+            self.db = Database("config/database.json")
+            if self.db.create_connection():
+                self.load_database_button.setEnabled(False) # Disable button after successful connection
+                self.load_database_button.setText("Database Connected")
+                self.search_button.setEnabled(True) # Enable search
+                self.results_summary_label.setText("Database connected. Ready to search.")
+            else:
+                self.results_summary_label.setText("Database connection failed. Check credentials/server.")
 
     def perform_search(self):
         ## Clear Cards ##
@@ -132,7 +131,7 @@ class CVAnalyzerApp(QMainWindow):
         algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
         top_n = self.top_matches_spinbox.value()
 
-        if not self.db_connection:
+        if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
         
@@ -141,7 +140,7 @@ class CVAnalyzerApp(QMainWindow):
 
         start_time = time.time()
         search_engine = Search()
-        all_applications = get_all_cv_data(self.db_connection)
+        all_applications = self.db.get_all_cv_data()
         results = []
         
         for app_data in all_applications:
@@ -174,7 +173,6 @@ class CVAnalyzerApp(QMainWindow):
         self.results_summary_label.setText(
             f"Exact Match: Scanned {len(all_applications)} CVs in {runtime_ms:.2f} ms. Found {len(results)} relevant CV(s)."
         )
-        ## Input Fuzzy match results here
 
         # Clear previous results
         for i in reversed(range(self.results_grid_layout.count())):
@@ -188,7 +186,7 @@ class CVAnalyzerApp(QMainWindow):
 
         for result in final_results:
             card = self.create_cv_card(
-                result["detail_id"], # Pass the detail_id
+                result["detail_id"],
                 result["applicant_id"],
                 result["name"],
                 result["application_role"],
@@ -197,7 +195,6 @@ class CVAnalyzerApp(QMainWindow):
             )
             self.results_grid_layout.addWidget(card)
 
-    
     def create_cv_card(self, detail_id, applicant_id, name, application_role, cv_path, matched_keywords_data):
         card = QFrame()
         card.setFrameShape(QFrame.Box)
@@ -236,11 +233,11 @@ class CVAnalyzerApp(QMainWindow):
         return card
 
     def show_summary(self, detail_id): 
-        if not self.db_connection:
+        if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
             
-        details = get_summary_details_by_id(self.db_connection, detail_id)
+        details = self.db.get_summary_details_by_id(detail_id)
 
         if details:
             self.summary_window = SummaryWindow(details)
