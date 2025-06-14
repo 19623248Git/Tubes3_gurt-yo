@@ -9,6 +9,7 @@ class Search:
                         'bm': BMStrategy(),
                         'fuzzy': FuzzyStrategy(),  # Placeholder for future fuzzy search strategy
                 }
+                self.successStrategy = None
         
         def _search(self, strategy_name, text, pattern):
                 """
@@ -26,12 +27,14 @@ class Search:
                         result = self.strategies['kmp'].search(text, pattern)
                         if result > 0:
                                 print(f"Found {result} matches for pattern '{pattern}' using KMP Strategy.")
+                                self.successStrategy = 'kmp'
                                 return result
                 elif strategy_name == 'bm':
                         print("Using BM search strategy...")
                         result = self.strategies['bm'].search(text, pattern)
                         if result > 0:
                                 print(f"Found {result} matches for pattern '{pattern}' using BM Strategy.")
+                                self.successStrategy = 'bm'
                                 return result
                 else:
                         print(f"Unknown search strategy: {strategy_name}")
@@ -48,7 +51,9 @@ class Search:
                 result_fuzzy = self.strategies['fuzzy'].search(text, pattern) 
                 if result_fuzzy > 0:
                         print(f"Found {result_fuzzy} matches for pattern '{pattern}' using Fuzzy Strategy.")
+                        self.successStrategy = 'fuzzy'
                         return result_fuzzy
                 else:
                         print(f"No matches found for pattern '{pattern}' using Any Strategy.")
+                        self.successStrategy = None
                         return 0
