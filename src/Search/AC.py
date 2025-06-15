@@ -1,4 +1,5 @@
 from src.Search.ACTrie import ACTrie
+from collections import defaultdict
 
 '''
 AC (Aho-Corasick) class for handling CV text extraction and manipulation.
@@ -32,17 +33,18 @@ class AC:
                 '''Search for the pattern in the CV text using AC algorithm.'''
                 text = self.cv.get_cleaned_text()
                 n = len(text)
-                res = []
+                
+                res = defaultdict(list)
 
                 # Warning for empty text
                 if n == 0:
                         print(f"Warning: Empty text provided")
-                        return res
+                        return dict(res)
 
                 # Warning for empty pattern
                 if not self.ac_trie.root.children:
                         print("Warning: No patterns have been inserted into the trie.")
-                        return res
+                        return dict(res)
 
                 # Perform the Aho-Corasick search
                 current_node = self.ac_trie.root
@@ -59,6 +61,7 @@ class AC:
                         
                         if current_node.output:
                                 for pattern in current_node.output:
-                                        res.append((i - len(pattern) + 1, pattern))
+                                        start_index = i - len(pattern) + 1
+                                        res[pattern].append(start_index)
 
-                return res
+                return dict(res)
