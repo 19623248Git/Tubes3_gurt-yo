@@ -13,10 +13,11 @@ class DirectoryScanner:
                 
                 """
                 Initializes the DirectoryScanner and collects all file paths.
-                @param base_dir (str) The path to the root directory to scan (e.g., '../data' from src).
+                @param base_dir (str) The path to the root directory to scan (e.g., 'data' from project root).
                 """
 
-                self.base_dir = base_dir
+                # Remove any leading ../ from the path
+                self.base_dir = base_dir.replace("../", "")
                 self.file_path_map = self._collect_file_paths()
                 # Get absolute path for display
                 self.abs_base_dir = os.path.abspath(self.base_dir)

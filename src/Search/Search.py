@@ -1,6 +1,6 @@
-from Search.KMPStrategy import KMPStrategy
-from Search.BMStrategy import BMStrategy
-from Search.FuzzyStrategy import FuzzyStrategy
+from src.Search.KMPStrategy import KMPStrategy
+from src.Search.BMStrategy import BMStrategy
+from src.Search.FuzzyStrategy import FuzzyStrategy
 
 class Search:
         def __init__(self):

@@ -1,4 +1,3 @@
-# filepath: c:\Users\Nathan Jovial\Documents\GitHub\Tubes3_Stima\test\SeedingTest.py
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -7,8 +6,8 @@ from src.Seeder import Seeder
 from mysql.connector import Error
 
 def test_database_connection():
-    base_dir = '../data'
-    config_path = '../config/database.json'
+    base_dir = 'data'
+    config_path = 'config/database.json'
     seeder = None
     
     try:
@@ -45,8 +44,8 @@ def test_seeder():
         return False
 
     # Test initialization and database connection
-    base_dir = '../data'
-    config_path = '../config/database.json'
+    base_dir = 'data'
+    config_path = 'config/database.json'
     
     try:
         # Initialize seeder

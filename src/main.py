@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import json
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -15,11 +16,13 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QRadioButton,
     QSpinBox,
+    QFileDialog,  # Add this import
+    QMessageBox,  # Add this import
 )
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from SummaryWindow import SummaryWindow 
-from Database import create_connection, get_all_cv_data, get_all_cv_data, get_summary_details_by_id
+from Database import Database
 from ExtractCV import ExtractCV
 from Search.Search import Search
 
@@ -27,40 +30,185 @@ class CVAnalyzerApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gurt:Yo CV Analyzer")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1000, 700)
+        self.db = None
+        self.config_path = "config/database.json"  # Default config path
+        self.search_engine = Search()  # Create search engine once
 
-        self.db_connection = None
+        # Set application-wide stylesheet
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f5f6fa;
+            }
+            #contentContainer {
+                background-color: #f5f6fa;
+            }
+            #cardContainer {
+                background-color: #f5f6fa;
+            }
+            QFrame {
+                background-color: white;
+                border-radius: 10px;
+                padding: 15px;
+            }
+            QPushButton {
+                background-color: #4834d4;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 20px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #686de0;
+            }
+            QPushButton:disabled {
+                background-color: #bdc3c7;
+            }
+            QLineEdit {
+                padding: 8px;
+                border: 2px solid #dcdde1;
+                border-radius: 5px;
+                background-color: white;
+            }
+            QLineEdit:focus {
+                border: 2px solid #4834d4;
+            }
+            QLabel {
+                color: #2d3436;
+                font-size: 14px;
+            }
+            QLabel#statusLabel {
+                padding: 8px 15px;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            QLabel#statusLabel[status="success"] {
+                background-color: #27ae60;
+                color: white;
+            }
+            QLabel#statusLabel[status="error"] {
+                background-color: #e74c3c;
+                color: white;
+            }
+            QLabel#statusLabel[status="none"] {
+                background-color: #95a5a6;
+                color: white;
+            }
+            QLabel#pathLabel {
+                color: #636e72;
+                font-size: 12px;
+                padding: 5px 10px;
+                background-color: #f1f2f6;
+                border-radius: 3px;
+            }
+            QMessageBox {
+                background-color: white;
+            }
+            QRadioButton {
+                font-size: 14px;
+                spacing: 8px;
+                color: #2d3436;
+            }
+            QSpinBox {
+                padding: 8px;
+                border: 2px solid #dcdde1;
+                border-radius: 5px;
+            }
+            QScrollArea {
+                border: none;
+                background-color: #f5f6fa;
+            }
+        """)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        # scroll_area.setStyleSheet()
+        self.setCentralWidget(scroll_area)
 
         # Main widget and layout
         main_widget = QWidget()
-        self.setCentralWidget(main_widget)
+        main_widget.setObjectName("contentContainer")
+        scroll_area.setWidget(main_widget)
         main_layout = QVBoxLayout(main_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(20)
 
-        ### Load Database Button ###
-        top_bar_layout = QHBoxLayout()
-        top_bar_layout.addStretch()  # Add spacer to push the button to the right
+        ### Top Bar with Database Controls ###
+        top_bar_frame = QFrame()
+        top_bar_layout = QHBoxLayout(top_bar_frame)
+        top_bar_layout.setContentsMargins(20, 10, 20, 10)
+        
+        # Left side - Status and Path
+        left_layout = QVBoxLayout()
+        
+        # Status Label
+        self.status_label = QLabel("No Database Loaded")
+        self.status_label.setObjectName("statusLabel")
+        self.status_label.setProperty("status", "none")
+        left_layout.addWidget(self.status_label)
+        
+        # Config Path Label
+        self.path_label = QLabel(f"Config: {self.config_path}")
+        self.path_label.setObjectName("pathLabel")
+        left_layout.addWidget(self.path_label)
+        
+        # Database Controls
+        db_controls_layout = QHBoxLayout()
+        db_controls_layout.setSpacing(10)
+        
+        top_bar_layout.addLayout(left_layout)
+        top_bar_layout.addStretch()
+        
+        self.config_button = QPushButton("Set Database Path")
+        self.config_button.setFixedWidth(150)
+        self.config_button.clicked.connect(self.set_database_path)
         self.load_database_button = QPushButton("Load Database")
-        self.load_database_button.setStyleSheet("padding: 1px;")
+        self.load_database_button.setFixedWidth(150)
+        self.load_database_button.clicked.connect(self.load_database)
+        
+        top_bar_layout.addWidget(self.config_button)
         top_bar_layout.addWidget(self.load_database_button)
+        
+        main_layout.addWidget(top_bar_frame)
 
-        main_layout.addLayout(top_bar_layout)  # Add the top bar layout to the main layout
-
-        ### Top Search Panel ###
+        ### Search Panel ###
         search_panel = QFrame()
-        search_panel.setFrameShape(QFrame.StyledPanel)
+        search_panel.setStyleSheet("""
+            QFrame {
+                background-color: white;
+                border-radius: 10px;
+                padding: 20px;
+            }
+        """)
         search_layout = QFormLayout(search_panel)
-        search_layout.setSpacing(10)
+        search_layout.setSpacing(15)
+        search_layout.setContentsMargins(20, 20, 20, 20)
+
+        # Title for search panel
+        search_title = QLabel("Search CVs")
+        search_title.setStyleSheet("""
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+        """)
+        search_layout.addRow(search_title)
 
         # Keywords input
         self.keywords_input = QLineEdit()
+        self.keywords_input.setStyleSheet("color: #2d3436;")
         self.keywords_input.setPlaceholderText("e.g., React, Express, HTML")
         search_layout.addRow(QLabel("Keywords:"), self.keywords_input)
 
         # Search Algorithm selection
         algorithm_layout = QHBoxLayout()
         self.kmp_radio = QRadioButton("KMP")
+        self.kmp_radio.setStyleSheet("color: #2d3436;")
         self.bm_radio = QRadioButton("BM")
-        self.kmp_radio.setChecked(True)  # Default selection
+        self.bm_radio.setStyleSheet("color: #2d3436;")
+        self.kmp_radio.setChecked(True)
         algorithm_layout.addWidget(self.kmp_radio)
         algorithm_layout.addWidget(self.bm_radio)
         search_layout.addRow(QLabel("Search Algorithm:"), algorithm_layout)
@@ -72,50 +220,129 @@ class CVAnalyzerApp(QMainWindow):
         search_layout.addRow(QLabel("Top Matches:"), self.top_matches_spinbox)
 
         # Search Button
-        self.search_button = QPushButton("Search")
-        self.search_button.setEnabled(False) 
-        self.search_button.setStyleSheet("padding: 10px;")
-        search_layout.addRow(self.search_button)
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        self.search_button = QPushButton("Search CVs")
+        self.search_button.setEnabled(False)
+        self.search_button.setFixedWidth(200)
+        button_layout.addWidget(self.search_button)
+        search_layout.addRow(button_layout)
 
         main_layout.addWidget(search_panel)
 
         ### Results Section ###
         results_frame = QFrame()
+        results_frame.setStyleSheet("""
+            QFrame {
+                background-color: white;
+                border-radius: 10px;
+                padding: 20px;
+            }
+        """)
+        results_frame.setMinimumHeight(400)
         main_layout.addWidget(results_frame)
         results_layout = QVBoxLayout(results_frame)
+        results_layout.setContentsMargins(20, 20, 20, 20)
+        results_layout.setSpacing(0)
+
+        # Results title
+        results_title = QLabel("Search Results")
+        results_title.setStyleSheet("""
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 5px;
+        """)
+        results_layout.addWidget(results_title)
 
         # Summary of search performance
         self.results_summary_label = QLabel("Search results will appear here.")
         self.results_summary_label.setAlignment(Qt.AlignCenter)
+        self.results_summary_label.setStyleSheet("""
+            color: #636e72;
+            font-size: 16px;
+            padding: 5px;
+        """)
         results_layout.addWidget(self.results_summary_label)
 
         # Area for CV cards
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
+        """)
         results_layout.addWidget(scroll_area)
 
         self.results_container = QWidget()
-        self.results_grid_layout = QVBoxLayout(self.results_container) # Using QVBoxLayout for vertical stacking
+        self.results_container.setObjectName("cardContainer")
+        self.results_grid_layout = QVBoxLayout(self.results_container)
+        self.results_grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.results_grid_layout.setSpacing(1)
         scroll_area.setWidget(self.results_container)
-
-        # Placeholder for summary window
         self.summary_window = None
 
-        # Load database
-        self.load_database_button.clicked.connect(self.load_database)
+        # Connect buttons to their handlers (only once)
         self.search_button.clicked.connect(self.perform_search)
 
-    def load_database(self):
-        if self.db_connection is None:
-            self.db_connection = create_connection()
+    def set_database_path(self):
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Select Database Configuration File",
+                "",
+                "JSON Files (*.json)"
+            )
+            if file_path:                # Update the config path
+                self.config_path = file_path
+                # Test if the config file is valid by trying to load it
+                with open(file_path, 'r') as f:
+                    json.load(f)  # This will raise an error if JSON is invalid
+                
+                # Update the path display
+                self.path_label.setText(f"Config: {file_path}")
+                self.status_label.setText("Database Path Updated")
+                self.status_label.setProperty("status", "success")
+                self.status_label.style().unpolish(self.status_label)
+                self.status_label.style().polish(self.status_label)
+                QMessageBox.information(self, "Success", "Database configuration path updated successfully!")
+        except json.JSONDecodeError:
+            self.status_label.setText("Invalid Config File")
+            self.status_label.setProperty("status", "error")
+            self.status_label.style().unpolish(self.status_label)
+            self.status_label.style().polish(self.status_label)
+            QMessageBox.critical(self, "Error", "The selected file is not a valid JSON configuration file.")
+        except Exception as e:
+            self.status_label.setText("Failed to Set Path")
+            self.status_label.setProperty("status", "error")
+            self.status_label.style().unpolish(self.status_label)
+            self.status_label.style().polish(self.status_label)
+            QMessageBox.critical(self, "Error", f"Failed to update database path: {str(e)}")
 
-        if self.db_connection and self.db_connection.is_connected():
-            self.load_database_button.setEnabled(False) # Disable button after successful connection
-            self.load_database_button.setText("Database Connected")
-            self.search_button.setEnabled(True) # Enable search
-            self.results_summary_label.setText("Database connected. Ready to search.")
-        else:
-            self.results_summary_label.setText("Database connection failed. Check credentials/server.")
+    def load_database(self):
+        try:
+            # Create new database instance with current config path
+            self.db = Database(self.config_path)
+            
+            # Try to establish connection
+            if self.db.create_connection():
+                self.status_label.setText("Database Connected")
+                self.status_label.setProperty("status", "success")
+                self.status_label.style().unpolish(self.status_label)
+                self.status_label.style().polish(self.status_label)
+                self.search_button.setEnabled(True)
+                QMessageBox.information(self, "Success", "Database loaded and connected successfully!")
+            else:
+                raise Exception("Failed to establish database connection")
+        except Exception as e:
+            self.status_label.setText("Failed to Load")
+            self.status_label.setProperty("status", "error")
+            self.status_label.style().unpolish(self.status_label)
+            self.status_label.style().polish(self.status_label)
+            self.search_button.setEnabled(False)
+            QMessageBox.critical(self, "Error", f"Failed to load database: {str(e)}")
 
     def perform_search(self):
         ## Clear Cards ##
@@ -132,7 +359,7 @@ class CVAnalyzerApp(QMainWindow):
         algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
         top_n = self.top_matches_spinbox.value()
 
-        if not self.db_connection:
+        if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
         
@@ -140,8 +367,7 @@ class CVAnalyzerApp(QMainWindow):
         QApplication.processEvents() # Allow GUI to update
 
         start_time = time.time()
-        search_engine = Search()
-        all_applications = get_all_cv_data(self.db_connection)
+        all_applications = self.db.get_all_cv_data()
         results = []
         
         for app_data in all_applications:
@@ -150,7 +376,7 @@ class CVAnalyzerApp(QMainWindow):
             
             matched_keywords = {}
             for keyword in keywords:
-                count = search_engine._search(algorithm, cv_extractor, keyword)
+                count = self.search_engine._search(algorithm, cv_extractor, keyword)
                 if count > 0:
                     matched_keywords[keyword] = count
             
@@ -174,7 +400,6 @@ class CVAnalyzerApp(QMainWindow):
         self.results_summary_label.setText(
             f"Exact Match: Scanned {len(all_applications)} CVs in {runtime_ms:.2f} ms. Found {len(results)} relevant CV(s)."
         )
-        ## Input Fuzzy match results here
 
         # Clear previous results
         for i in reversed(range(self.results_grid_layout.count())):
@@ -188,7 +413,7 @@ class CVAnalyzerApp(QMainWindow):
 
         for result in final_results:
             card = self.create_cv_card(
-                result["detail_id"], # Pass the detail_id
+                result["detail_id"],
                 result["applicant_id"],
                 result["name"],
                 result["application_role"],
@@ -197,7 +422,6 @@ class CVAnalyzerApp(QMainWindow):
             )
             self.results_grid_layout.addWidget(card)
 
-    
     def create_cv_card(self, detail_id, applicant_id, name, application_role, cv_path, matched_keywords_data):
         card = QFrame()
         card.setFrameShape(QFrame.Box)
@@ -236,11 +460,11 @@ class CVAnalyzerApp(QMainWindow):
         return card
 
     def show_summary(self, detail_id): 
-        if not self.db_connection:
+        if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
             
-        details = get_summary_details_by_id(self.db_connection, detail_id)
+        details = self.db.get_summary_details_by_id(detail_id)
 
         if details:
             self.summary_window = SummaryWindow(details)
