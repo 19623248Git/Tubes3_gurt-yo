@@ -23,25 +23,25 @@ class Search:
                 if strategy_name  == 'fuzzy':
                         print("Fuzzy search strategy can not be called directly.")
                 elif strategy_name == 'kmp':
-                        print("Using KMP search strategy...")
+                        # print("Using KMP search strategy...")
                         result = self.strategies['kmp'].search(text, pattern)
                         if result > 0:
                                 print(f"Found {result} matches for pattern '{pattern}' using KMP Strategy.")
                                 self.successStrategy = 'kmp'
                                 return result
                 elif strategy_name == 'bm':
-                        print("Using BM search strategy...")
+                        # print("Using BM search strategy...")
                         result = self.strategies['bm'].search(text, pattern)
                         if result > 0:
                                 print(f"Found {result} matches for pattern '{pattern}' using BM Strategy.")
                                 self.successStrategy = 'bm'
                                 return result
                 else:
-                        print(f"Unknown search strategy: {strategy_name}")
+                        # print(f"Unknown search strategy: {strategy_name}")
                         return -1
 
                 # if no matches found, try fuzzy search first
-                print(f"No matches found for pattern '{pattern}' using Fuzzy Strategy.")
+                # print(f"No matches found for pattern '{pattern}' using Fuzzy Strategy.")
                 
                 # Temporary return statement to avoid errors
                 # if implemented remove this line

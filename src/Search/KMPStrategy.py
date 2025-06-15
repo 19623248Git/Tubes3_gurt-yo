@@ -9,7 +9,7 @@ class KMPStrategy(SearchStrategy):
 
     def search(self, cv: ExtractCV, pattern: str) -> int:
         
-        print("Using KMP search algorithm...")
+        # print("Using KMP search algorithm...")
 
         kmp_instance = KMP(pattern, cv)
         results = kmp_instance.search()
@@ -18,5 +18,5 @@ class KMPStrategy(SearchStrategy):
                 print(f"Found {len(results)} matches for pattern '{pattern}' in the CV.")
                 return len(results)
         else:
-                print(f"No matches found for pattern '{pattern}' in the CV.")
+                # print(f"No matches found for pattern '{pattern}' in the CV.")
                 return 0
