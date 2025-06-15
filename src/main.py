@@ -356,7 +356,7 @@ class CVAnalyzerApp(QMainWindow):
         if not keywords_text:
             self.results_summary_label.setText("Please enter at least one keyword.")
             return
-        keywords = [kw.strip().lower() for kw in keywords_text.split(',') if kw.strip()]
+        keywords = [kw.strip().lower() for kw in keywords_text.replace(",", " ").split() if kw.strip()]
         algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
         top_n = self.top_matches_spinbox.value()
 
@@ -473,11 +473,8 @@ class CVAnalyzerApp(QMainWindow):
                 extractor = ExtractCV(cv_path)
                 extractor.extract()
                 full_text = extractor.get_raw_text() # Use the raw extracted text for Regex
-
-                # 3. Run the Regex extractor
                 regex_details = extract_all_details(full_text)
-                
-                # 4. Add the extracted regex details to the main details dictionary
+                print(f"Extracted details: {regex_details}") # DEBUG
                 details.update(regex_details)
 
             self.summary_window = SummaryWindow(details)

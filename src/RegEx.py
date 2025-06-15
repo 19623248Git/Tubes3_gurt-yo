@@ -53,7 +53,7 @@ def extract_all_details(text):
     Extracts all required sections (Summary, Skills, Experience, Education) from the CV text.
     """
     target_sections = {
-        'summary': ['summary', 'overview', 'profile', 'objective', 'professional summary', 'executive profile', 'career overview'],
+        'summary': ['summary', 'overview', 'profile', 'objective', 'professional summary', 'executive profile', 'career overview', 'executive summary'],
         'skills': ['skills', 'abilities', 'technologies', 'skill highlights'],
         'experience': ['experience', 'work history', 'employment history', 'professional experience', 'work experience'],
         'education': ['education', 'qualifications', 'education and training']
@@ -61,7 +61,7 @@ def extract_all_details(text):
 
     all_known_headings = [ # Universal Map
         # Summary
-        'Executive Profile', 'Summary', 'Overview', 'Profile', 'Objective', 'career overview'
+        'Executive Profile', 'Summary', 'Overview', 'Profile', 'Objective', 'career overview', 'executive summary',
         # Skills
         'Skill Highlights', 'Skills', 'Abilities', 'Technologies',
         # Experience
@@ -69,7 +69,7 @@ def extract_all_details(text):
         # Education
         'Education', 'Education and Training',
         # Stop words
-        'Accomplishments', 'Highlights', 'Additional Information', 'References', 'Website and Links'
+        'Accomplishments', 'Highlights', 'Additional Information', 'References', 'Website and Links', 'Affiliations'
     ]
 
     extracted_data = {}
