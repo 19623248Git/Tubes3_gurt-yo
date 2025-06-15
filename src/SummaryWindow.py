@@ -129,11 +129,13 @@ class SummaryWindow(QWidget):
 
         ### Job History ###
         experience_text = details.get('experience', 'Experience not found.')
+        # experience_list = [exp.strip() for exp in experience_text.split('\n') if exp.strip()] #Alternative
         job_history_frame = self.create_section("Professional Experience", [experience_text])
         main_layout.addWidget(job_history_frame)
 
         ### Education History ###
         education_text = details.get('education', 'Education not found.')
+        # education_list = [edu.strip() for edu in education_text.split('\n') if edu.strip()] # Alternative
         education_frame = self.create_section("Education", [education_text])
         main_layout.addWidget(education_frame)
 
@@ -156,11 +158,11 @@ class SummaryWindow(QWidget):
         layout.addWidget(title_label)
 
         for item_text in items:
-            item_label = QLabel(item_text)
+            item_label = QLabel(f"• {item_text}")
             item_label.setWordWrap(True)
             item_label.setStyleSheet("""
                 color: #636e72;
-                line-height: 1.5;
+                line-height: 0.5;
                 margin-bottom: 8px;
             """)
             layout.addWidget(item_label)
