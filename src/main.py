@@ -40,6 +40,12 @@ class CVAnalyzerApp(QMainWindow):
             QMainWindow {
                 background-color: #f5f6fa;
             }
+            #contentContainer {
+                background-color: #f5f6fa;
+            }
+            #cardContainer {
+                background-color: #f5f6fa;
+            }
             QFrame {
                 background-color: white;
                 border-radius: 10px;
@@ -96,9 +102,13 @@ class CVAnalyzerApp(QMainWindow):
                 background-color: #f1f2f6;
                 border-radius: 3px;
             }
+            QMessageBox {
+                background-color: white;
+            }
             QRadioButton {
                 font-size: 14px;
                 spacing: 8px;
+                color: #2d3436;
             }
             QSpinBox {
                 padding: 8px;
@@ -107,16 +117,20 @@ class CVAnalyzerApp(QMainWindow):
             }
             QScrollArea {
                 border: none;
-                background-color: transparent;
+                background-color: #f5f6fa;
             }
         """)
 
-        self.db = None
-        self.config_path = "config/database.json"  # Default config path
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        # scroll_area.setStyleSheet()
+        self.setCentralWidget(scroll_area)
 
         # Main widget and layout
         main_widget = QWidget()
-        self.setCentralWidget(main_widget)
+        main_widget.setObjectName("contentContainer")
+        scroll_area.setWidget(main_widget)
         main_layout = QVBoxLayout(main_widget)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
@@ -184,13 +198,16 @@ class CVAnalyzerApp(QMainWindow):
 
         # Keywords input
         self.keywords_input = QLineEdit()
+        self.keywords_input.setStyleSheet("color: #2d3436;")
         self.keywords_input.setPlaceholderText("e.g., React, Express, HTML")
         search_layout.addRow(QLabel("Keywords:"), self.keywords_input)
 
         # Search Algorithm selection
         algorithm_layout = QHBoxLayout()
         self.kmp_radio = QRadioButton("KMP")
+        self.kmp_radio.setStyleSheet("color: #2d3436;")
         self.bm_radio = QRadioButton("BM")
+        self.bm_radio.setStyleSheet("color: #2d3436;")
         self.kmp_radio.setChecked(True)
         algorithm_layout.addWidget(self.kmp_radio)
         algorithm_layout.addWidget(self.bm_radio)
@@ -222,10 +239,11 @@ class CVAnalyzerApp(QMainWindow):
                 padding: 20px;
             }
         """)
+        results_frame.setMinimumHeight(400)
         main_layout.addWidget(results_frame)
         results_layout = QVBoxLayout(results_frame)
         results_layout.setContentsMargins(20, 20, 20, 20)
-        results_layout.setSpacing(15)
+        results_layout.setSpacing(0)
 
         # Results title
         results_title = QLabel("Search Results")
@@ -233,7 +251,7 @@ class CVAnalyzerApp(QMainWindow):
             font-size: 24px;
             font-weight: bold;
             color: #2d3436;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         """)
         results_layout.addWidget(results_title)
 
@@ -243,7 +261,7 @@ class CVAnalyzerApp(QMainWindow):
         self.results_summary_label.setStyleSheet("""
             color: #636e72;
             font-size: 16px;
-            padding: 20px;
+            padding: 5px;
         """)
         results_layout.addWidget(self.results_summary_label)
 
@@ -259,10 +277,11 @@ class CVAnalyzerApp(QMainWindow):
         results_layout.addWidget(scroll_area)
 
         self.results_container = QWidget()
+        self.results_container.setObjectName("cardContainer")
         self.results_grid_layout = QVBoxLayout(self.results_container)
         self.results_grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.results_grid_layout.setSpacing(15)
-        scroll_area.setWidget(self.results_container)        # Placeholder for summary window
+        self.results_grid_layout.setSpacing(1)
+        scroll_area.setWidget(self.results_container)
         self.summary_window = None
 
         # Connect buttons to their handlers (only once)

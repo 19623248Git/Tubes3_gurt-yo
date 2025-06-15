@@ -22,9 +22,13 @@ class SummaryWindow(QWidget):
         super().__init__()
         self.setWindowTitle("CV Summary")
         self.setGeometry(150, 150, 800, 700)  # Slightly larger window
+        self.setObjectName("summaryWindow")
 
         # Set window-wide stylesheet
         self.setStyleSheet("""
+            #summaryWindow {
+                background-color: #f5f6fa;
+            }
             QWidget {
                 background-color: #f5f6fa;
             }
@@ -35,13 +39,20 @@ class SummaryWindow(QWidget):
                 padding: 20px;
             }
             QLabel {
+                background-color: transparent;
                 color: #2d3436;
                 font-size: 14px;
             }
         """)
 
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        window_layout = QHBoxLayout(self)
+        window_layout.setContentsMargins(0, 0, 0, 0)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        scroll_content_widget = QWidget()
+        main_layout = QVBoxLayout(scroll_content_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(15)
 
         ### Header ###
@@ -126,6 +137,10 @@ class SummaryWindow(QWidget):
             ["<b>Bachelor of Informatics Engineering</b><br>Institut Teknologi Bandung (2022-2026)<br>• Notable coursework in Software Engineering, Data Structures, and Algorithms"]
         )
         main_layout.addWidget(education_frame)
+
+        main_layout.addStretch()
+        scroll_area.setWidget(scroll_content_widget)
+        window_layout.addWidget(scroll_area)
 
     def create_section(self, title, items):
         frame = QFrame()
