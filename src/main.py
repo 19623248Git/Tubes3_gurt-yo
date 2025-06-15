@@ -25,6 +25,7 @@ from SummaryWindow import SummaryWindow
 from Database import Database
 from ExtractCV import ExtractCV
 from Search.Search import Search
+from RegEx import extract_all_details
 
 class CVAnalyzerApp(QMainWindow):
     def __init__(self):
@@ -467,6 +468,18 @@ class CVAnalyzerApp(QMainWindow):
         details = self.db.get_summary_details_by_id(detail_id)
 
         if details:
+            cv_path = details.get('cv_path', '')
+            if cv_path:
+                extractor = ExtractCV(cv_path)
+                extractor.extract()
+                full_text = extractor.get_raw_text() # Use the raw extracted text for Regex
+
+                # 3. Run the Regex extractor
+                regex_details = extract_all_details(full_text)
+                
+                # 4. Add the extracted regex details to the main details dictionary
+                details.update(regex_details)
+
             self.summary_window = SummaryWindow(details)
             self.summary_window.show()
         else:
