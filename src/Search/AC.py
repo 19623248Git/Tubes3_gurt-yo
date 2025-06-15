@@ -51,7 +51,7 @@ class AC:
 
                 for i,char in enumerate(text):
                         while current_node is not None and char not in current_node.children:
-                                current_node = current_node.failure_link
+                                current_node = current_node.fail_link
                         
                         if current_node is None:
                                 current_node = self.ac_trie.root
