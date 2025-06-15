@@ -54,8 +54,8 @@ def extract_all_details(text):
     """
     target_sections = {
         'summary': ['summary', 'overview', 'profile', 'objective', 'professional summary', 'executive profile', 'career overview', 'executive summary'],
-        'skills': ['skills', 'abilities', 'technologies', 'skill highlights'],
-        'experience': ['experience', 'work history', 'employment history', 'professional experience', 'work experience'],
+        'skills': ['skills', 'abilities', 'technologies', 'skill highlights', 'areas of expertise'],
+        'experience': ['experience', 'work history', 'employment history', 'professional experience', 'work experience', 'teaching experience'],
         'education': ['education', 'qualifications', 'education and training']
     }
 
@@ -63,9 +63,9 @@ def extract_all_details(text):
         # Summary
         'Executive Profile', 'Summary', 'Overview', 'Profile', 'Objective', 'career overview', 'executive summary',
         # Skills
-        'Skill Highlights', 'Skills', 'Abilities', 'Technologies',
+        'Skill Highlights', 'Skills', 'Abilities', 'Technologies', 'Areas of Expertise'
         # Experience
-        'Professional Experience', 'Experience', 'Work History', 'Employment History', 'Work experience',
+        'Professional Experience', 'Experience', 'Work History', 'Employment History', 'Work experience', 'Teaching experience'
         # Education
         'Education', 'Education and Training',
         # Stop words
