@@ -221,7 +221,23 @@ class CVAnalyzerApp(QMainWindow):
         self.top_matches_spinbox = QSpinBox()
         self.top_matches_spinbox.setMinimum(1)
         self.top_matches_spinbox.setValue(5)
-        self.top_matches_spinbox.setButtonSymbols(QSpinBox.UpDownArrows)  # Force vertical arrows
+        self.top_matches_spinbox.setStyleSheet("""
+            QSpinBox {
+                color: #ffffff;
+                padding: 8px;
+                border: 2px solid #dcdde1;
+                border-radius: 5px;
+            }
+            QSpinBox::up-button, QSpinBox::down-button {
+                width: 20px;
+                height: 20px;
+            }
+            QSpinBox::up-arrow, QSpinBox::down-arrow {
+                width: 10px;
+                height: 10px;
+            }
+        """)
+
         search_layout.addRow(QLabel("Top Matches:"), self.top_matches_spinbox)
 
         # Search Button
