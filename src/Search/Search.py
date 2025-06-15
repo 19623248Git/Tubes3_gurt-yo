@@ -1,12 +1,14 @@
 from src.Search.KMPStrategy import KMPStrategy
 from src.Search.BMStrategy import BMStrategy
 from src.Search.FuzzyStrategy import FuzzyStrategy
+from src.Search.ACStrategy import ACStrategy
 
 class Search:
         def __init__(self):
                 self.strategies = {
                         'kmp': KMPStrategy(),
                         'bm': BMStrategy(),
+                        'ac': ACStrategy(),
                         'fuzzy': FuzzyStrategy(),
                 }
                 self.successStrategy = None
@@ -24,23 +26,20 @@ class Search:
                 result = 0
                 
                 if strategy_name == 'kmp':
-                        # print("Using KMP search strategy...")
                         result = self.strategies['kmp'].search(text, pattern)
                         if result > 0:
-                                # print(f"Found {result} matches for pattern '{pattern}' using KMP Strategy.")
                                 self.successStrategy = 'kmp'
                 elif strategy_name == 'bm':
-                        # print("Using BM search strategy...")
                         result = self.strategies['bm'].search(text, pattern)
                         if result > 0:
-                                # print(f"Found {result} matches for pattern '{pattern}' using BM Strategy.")
                                 self.successStrategy = 'bm'
-                        
+                elif strategy_name == 'ac':
+                        result = self.strategies['ac'].search(text, pattern)
+                        if result > 0:
+                                self.successStrategy = 'ac'
                 elif strategy_name == 'fuzzy':
-                        # print("Using Fuzzy search strategy...")
                         result = self.strategies['fuzzy'].search(text, pattern)
                         if result > 0:
-                                # print(f"Found {result} matches for pattern '{pattern}' using Fuzzy Strategy.")
                                 self.successStrategy = 'fuzzy'
                 else:
                         print(f"Unknown search strategy: {strategy_name}")
