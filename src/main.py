@@ -272,7 +272,7 @@ class CVAnalyzerApp(QMainWindow):
         scroll_area.setStyleSheet("""
             QScrollArea {
                 border: none;
-                background-color: transparent;
+                background-color: #f5f6fa;
             }
         """)
         results_layout.addWidget(scroll_area)

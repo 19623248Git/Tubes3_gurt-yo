@@ -15,29 +15,30 @@ def find_section(text, keywords):
             continue
     return None, -1
 
-def extract_section_text(text, start_keyword, all_sections):
+def extract_section_text(text, target_section_keywords, all_stop_headings):
     """
-    Extracts text from a section, starting from the start_keyword
-    and ending at the beginning of the next section.
+    Extracts text for a target section, stopping at the next known heading.
     """
-    # Find the start position of the current section's keyword
-    _, start_pos = find_section(text, [start_keyword])
+    _, start_pos = find_section(text, target_section_keywords)
     if start_pos == -1:
         return "Not Found"
 
-    # Find the end position (the start of the next closest section)
     end_pos = len(text)
     
-    # Find start of all other sections to determine where current section ends
-    for section_name, section_keywords in all_sections.items():
-        if section_name != start_keyword:
-            # Find other keywords that appear *after* the current section starts
-            _, next_section_pos = find_section(text[start_pos:], section_keywords)
-            if next_section_pos != -1:
-                # Position is relative to the start_pos, so add it back
-                absolute_pos = start_pos + next_section_pos
-                if absolute_pos > start_pos:
-                    end_pos = min(end_pos, absolute_pos)
+    # Find the start of the *next* section to determine the end of the current one
+    # We search the text *after* the start of our current section
+    text_after_start = text[start_pos + 1:] 
+    
+    for heading in all_stop_headings:
+        # We don't want to match the keywords of the section we are currently in
+        if heading.lower() in [kw.lower() for kw in target_section_keywords]:
+            continue
+
+        _, next_section_pos = find_section(text_after_start, [heading])
+        if next_section_pos != -1:
+            # Position is relative, so add it back to get absolute position
+            absolute_pos = start_pos + 1 + next_section_pos
+            end_pos = min(end_pos, absolute_pos)
 
     # Extract the text from after the keyword's line to the start of the next section
     section_header_match = re.search(r'.*', text[start_pos:])
@@ -51,15 +52,28 @@ def extract_all_details(text):
     """
     Extracts all required sections (Summary, Skills, Experience, Education) from the CV text.
     """
-    section_definitions = {
-        'summary': ['summary', 'overview', 'profile', 'objective', 'professional summary'],
-        'skills': ['skills', 'abilities', 'technologies'],
-        'experience': ['experience', 'work history', 'employment history', 'professional experience'],
+    target_sections = {
+        'summary': ['summary', 'overview', 'profile', 'objective', 'professional summary', 'executive profile', 'career overview'],
+        'skills': ['skills', 'abilities', 'technologies', 'skill highlights'],
+        'experience': ['experience', 'work history', 'employment history', 'professional experience', 'work experience'],
         'education': ['education', 'qualifications', 'education and training']
     }
 
+    all_known_headings = [ # Universal Map
+        # Summary
+        'Executive Profile', 'Summary', 'Overview', 'Profile', 'Objective', 'career overview'
+        # Skills
+        'Skill Highlights', 'Skills', 'Abilities', 'Technologies',
+        # Experience
+        'Professional Experience', 'Experience', 'Work History', 'Employment History', 'Work experience',
+        # Education
+        'Education', 'Education and Training',
+        # Stop words
+        'Accomplishments', 'Highlights', 'Additional Information', 'References', 'Website and Links'
+    ]
+
     extracted_data = {}
-    for section_name in section_definitions:
-        extracted_data[section_name] = extract_section_text(text, section_name, section_definitions)
+    for section_name, keywords in target_sections.items():
+        extracted_data[section_name] = extract_section_text(text, keywords, all_known_headings)
 
     return extracted_data
