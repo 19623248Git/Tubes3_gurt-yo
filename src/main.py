@@ -131,7 +131,6 @@ class CVAnalyzerApp(QMainWindow):
         scroll_area.setFrameShape(QFrame.NoFrame)
         self.setCentralWidget(scroll_area)
 
-        # Main widget and layout
         main_widget = QWidget()
         main_widget.setObjectName("contentContainer")
         scroll_area.setWidget(main_widget)
@@ -139,21 +138,17 @@ class CVAnalyzerApp(QMainWindow):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
 
-        ### Top Bar with Database Controls ###
         top_bar_frame = QFrame()
         top_bar_layout = QHBoxLayout(top_bar_frame)
         top_bar_layout.setContentsMargins(20, 10, 20, 10)
         
-        # Left side - Status and Path
         left_layout = QVBoxLayout()
         
-        # Status Label
         self.status_label = QLabel("No Database Loaded")
         self.status_label.setObjectName("statusLabel")
         self.status_label.setProperty("status", "none")
         left_layout.addWidget(self.status_label)
         
-        # Config Path Label
         self.path_label = QLabel(f"Config: {self.config_path}")
         self.path_label.setObjectName("pathLabel")
         left_layout.addWidget(self.path_label)
@@ -176,7 +171,6 @@ class CVAnalyzerApp(QMainWindow):
         content_horizontal_layout = QHBoxLayout()
         content_horizontal_layout.setSpacing(20)
 
-        ### Search Panel (Left Side) ###
         search_panel = QFrame()
         search_panel.setStyleSheet("""
             QFrame {
@@ -190,7 +184,6 @@ class CVAnalyzerApp(QMainWindow):
         search_layout.setSpacing(15)
         search_layout.setContentsMargins(20, 20, 20, 20)
 
-        # Title for search panel
         search_title = QLabel("Search CVs")
         search_title.setStyleSheet("""
             font-size: 24px;
@@ -200,7 +193,6 @@ class CVAnalyzerApp(QMainWindow):
         """)
         search_layout.addRow(search_title)
 
-        # Keywords input
         self.keywords_input = QLineEdit()
         self.keywords_input.setStyleSheet("color: #2d3436;")
         self.keywords_input.setPlaceholderText("e.g., React, Express, HTML")
@@ -283,10 +275,12 @@ class CVAnalyzerApp(QMainWindow):
         # Summary of search performance
         self.results_summary_label = QLabel("Search results will appear here.")
         self.results_summary_label.setAlignment(Qt.AlignCenter)
+        self.results_summary_label.setWordWrap(True)  # Add this line
         self.results_summary_label.setStyleSheet("""
             color: #636e72;
             font-size: 16px;
-            padding: 5px;
+            padding: 10px;
+            line-height: 1.4;
         """)
         results_layout.addWidget(self.results_summary_label)
 
@@ -427,11 +421,32 @@ class CVAnalyzerApp(QMainWindow):
         if self.loading_widget:
             self.loading_widget.update_progress(current, total, current_cv)
     
-    def on_search_completed(self, results, runtime_ms, total_scanned, total_found):
+    def on_search_completed(self, results, timing_data, total_scanned, total_found):
         """Handle search completion."""
-        self.results_summary_label.setText(
-            f"Search completed: Scanned {total_scanned} CVs in {runtime_ms:.2f} ms. Found {total_found} relevant CV(s)."
-        )
+        
+        exact_time_ms = timing_data['exact_time_ms']
+        fuzzy_time_ms = timing_data['fuzzy_time_ms']
+        exact_matches = timing_data['exact_matches']
+        fuzzy_matches = timing_data['fuzzy_matches']
+        exact_cvs_scanned = timing_data['exact_cvs_scanned']
+        fuzzy_cvs_scanned = timing_data['fuzzy_cvs_scanned']
+        total_time_ms = timing_data['total_time_ms']
+        
+        summary_parts = []
+        
+        if exact_matches > 0:
+            summary_parts.append(f"Exact Match: {exact_cvs_scanned} CVs scanned in {exact_time_ms:.2f}ms")
+        
+        if fuzzy_matches > 0:
+            summary_parts.append(f"Fuzzy Match: {fuzzy_cvs_scanned} CVs scanned in {fuzzy_time_ms:.2f}ms")
+        
+        if not summary_parts:
+            summary_parts.append(f"No matches found: {total_scanned} CVs scanned in {total_time_ms:.2f}ms")
+        
+        summary_text = "\n".join(summary_parts)
+        summary_text += f"\nTotal: Found {total_found} relevant CV(s)"
+        
+        self.results_summary_label.setText(summary_text)
         
         self.clear_results_area()
         
@@ -445,6 +460,7 @@ class CVAnalyzerApp(QMainWindow):
             self.results_grid_layout.addWidget(no_results_label)
             return
         
+        # Display results
         for result in results:
             card = self.create_cv_card(
                 result["detail_id"],
@@ -498,12 +514,23 @@ class CVAnalyzerApp(QMainWindow):
 
         details_text = []
         i = 1
-        for keyword, count in matched_keywords_data.items():
+        for keyword, match_data in matched_keywords_data.items():
+            count = match_data['count']
+            match_type = match_data['type']
+            
             occurrence_str = "occurrence" if count == 1 else "occurrences"
-            details_text.append(f"{i}. {keyword}: {count} {occurrence_str}")
+            
+            if match_type == 'exact':
+                type_indicator = f"<span style='color: #27ae60; font-weight: bold;'>(Exact)</span>"
+            else:  # fuzzy
+                type_indicator = f"<span style='color: #f39c12; font-weight: bold;'>(Fuzzy)</span>"
+            
+            details_text.append(f"{i}. {keyword}: {count} {occurrence_str} {type_indicator}")
             i += 1
+        
         keywords_label = QLabel("\n".join(details_text))
         keywords_label.setAlignment(Qt.AlignLeft)
+        keywords_label.setWordWrap(True)
 
         card_layout.addWidget(name_label)
         card_layout.addWidget(role_label)

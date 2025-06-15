@@ -1,3 +1,4 @@
 data
 env
+config/database.json
 __pycache__

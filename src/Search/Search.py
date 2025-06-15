@@ -7,7 +7,7 @@ class Search:
                 self.strategies = {
                         'kmp': KMPStrategy(),
                         'bm': BMStrategy(),
-                        'fuzzy': FuzzyStrategy(),  # Placeholder for future fuzzy search strategy
+                        'fuzzy': FuzzyStrategy(),
                 }
                 self.successStrategy = None
         
@@ -29,33 +29,21 @@ class Search:
                         if result > 0:
                                 # print(f"Found {result} matches for pattern '{pattern}' using KMP Strategy.")
                                 self.successStrategy = 'kmp'
-                                return result
                 elif strategy_name == 'bm':
                         # print("Using BM search strategy...")
                         result = self.strategies['bm'].search(text, pattern)
                         if result > 0:
                                 # print(f"Found {result} matches for pattern '{pattern}' using BM Strategy.")
                                 self.successStrategy = 'bm'
-                                return result
+                        
+                elif strategy_name == 'fuzzy':
+                        # print("Using Fuzzy search strategy...")
+                        result = self.strategies['fuzzy'].search(text, pattern)
+                        if result > 0:
+                                # print(f"Found {result} matches for pattern '{pattern}' using Fuzzy Strategy.")
+                                self.successStrategy = 'fuzzy'
                 else:
                         print(f"Unknown search strategy: {strategy_name}")
                         return -1
-
-
                 
-                # if matches found, return the result
-                if result != 0:
-                        return result
-                
-                # print(f"No matches found for pattern '{pattern}' using Fuzzy Strategy.")
-                
-
-                result_fuzzy = self.strategies['fuzzy'].search(text, pattern) 
-                if result_fuzzy != 0:
-                        # print(f"Found {result_fuzzy} matches for pattern '{pattern}' using Fuzzy Strategy.")
-                        self.successStrategy = 'fuzzy'
-                        return result_fuzzy
-                else:
-                        # print(f"No matches found for pattern '{pattern}' using Any Strategy.")
-                        self.successStrategy = None
-                        return 0
+                return result
