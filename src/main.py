@@ -219,6 +219,7 @@ class CVAnalyzerApp(QMainWindow):
                 padding: 8px;
                 border: 2px solid #dcdde1;
                 border-radius: 5px;
+                background-color: #2d3436;
             }
             QSpinBox::up-button, QSpinBox::down-button {
                 width: 20px;

@@ -53,21 +53,21 @@ def extract_all_details(text):
     Extracts all required sections (Summary, Skills, Experience, Education) from the CV text.
     """
     target_sections = {
-        'summary': ['summary', 'overview', 'profile', 'objective', 'professional summary', 'executive profile', 'career overview', 'executive summary'],
-        'skills': ['skills', 'abilities', 'technologies', 'skill highlights', 'areas of expertise'],
-        'experience': ['experience', 'work history', 'employment history', 'professional experience', 'work experience', 'teaching experience'],
-        'education': ['education', 'qualifications', 'education and training']
+        'summary': ['professional summary', 'executive profile', 'career overview', 'executive summary','summary', 'overview', 'profile', 'objective'],
+        'skills': [ 'areas of expertise', 'skill highlights', 'core strengths', 'core qualifications','skills', 'abilities', 'technologies'],
+        'experience': ['professional experience', 'work experience', 'teaching experience','experience', 'work history', 'employment history'],
+        'education': [ 'education and training','education', 'qualifications']
     }
 
     all_known_headings = [ # Universal Map
         # Summary
-        'Executive Profile', 'Summary', 'Overview', 'Profile', 'Objective', 'career overview', 'executive summary',
+        'Executive Profile','career overview', 'executive summary', 'Summary', 'Overview', 'Profile', 'Objective', 
         # Skills
-        'Skill Highlights', 'Skills', 'Abilities', 'Technologies', 'Areas of Expertise',
+        'Areas of Expertise','Skill Highlights', 'core strengths', 'core qualifications','Skills', 'Abilities', 'Technologies', 
         # Experience
-        'Professional Experience', 'Experience', 'Work History', 'Employment History', 'Work experience', 'Teaching experience',
+         'Work experience', 'Teaching experience','Professional Experience', 'Experience','Work History', 'Employment History', 
         # Education
-        'Education', 'Education and Training',
+        'Education and Training','Education', 
         # Stop words
         'Accomplishments', 'Highlights', 'Additional Information', 'References', 'Website and Links', 'Affiliations'
     ]
