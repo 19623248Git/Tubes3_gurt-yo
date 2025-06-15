@@ -51,6 +51,5 @@ class ACStrategy(SearchStrategy):
                 total_occurrences = sum(len(indices) for indices in details.values())
 
                 print(f"Found a total of {total_occurrences} occurrences for {len(details)} unique pattern(s).")
-                print("See the .last_results property on the strategy instance for detailed indices.")
 
                 return total_occurrences
