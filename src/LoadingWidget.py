@@ -16,19 +16,17 @@ class LoadingWidget(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         layout.setSpacing(20)
         
-        # Loading animation label - CENTERED AND LARGER
         self.animation_label = QLabel()
         self.animation_label.setAlignment(Qt.AlignCenter)
-        self.animation_label.setFixedSize(80, 80)  # Increased size
+        self.animation_label.setFixedSize(80, 80)
         self.animation_label.setStyleSheet("""
             QLabel {
                 background-color: transparent;
                 border: none;
             }
         """)
-        layout.addWidget(self.animation_label, 0, Qt.AlignCenter)  # Force center alignment
+        layout.addWidget(self.animation_label, 0, Qt.AlignCenter)
         
-        # Status text
         self.status_label = QLabel("Initializing search...")
         self.status_label.setAlignment(Qt.AlignCenter)
         self.status_label.setStyleSheet("""
@@ -39,10 +37,9 @@ class LoadingWidget(QWidget):
         """)
         layout.addWidget(self.status_label)
         
-        # Progress bar - INCREASED HEIGHT
         self.progress_bar = QProgressBar()
-        self.progress_bar.setFixedHeight(20)  # Increased from 8 to 20
-        self.progress_bar.setTextVisible(True)  # Show percentage text
+        self.progress_bar.setFixedHeight(20)
+        self.progress_bar.setTextVisible(True)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 2px solid #dcdde1;
@@ -59,7 +56,6 @@ class LoadingWidget(QWidget):
         """)
         layout.addWidget(self.progress_bar)
         
-        # Progress text
         self.progress_label = QLabel("0 / 0 CVs processed")
         self.progress_label.setAlignment(Qt.AlignCenter)
         self.progress_label.setStyleSheet("""
@@ -70,7 +66,6 @@ class LoadingWidget(QWidget):
         """)
         layout.addWidget(self.progress_label)
         
-        # Current CV being processed
         self.current_cv_label = QLabel("")
         self.current_cv_label.setAlignment(Qt.AlignCenter)
         self.current_cv_label.setStyleSheet("""
@@ -80,7 +75,6 @@ class LoadingWidget(QWidget):
         """)
         layout.addWidget(self.current_cv_label)
         
-        # Cancel button
         self.cancel_button = QPushButton("Cancel Search")
         self.cancel_button.setFixedWidth(150)
         self.cancel_button.setStyleSheet("""
@@ -103,18 +97,15 @@ class LoadingWidget(QWidget):
         self.rotation_angle = 0
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self.update_animation)
-        self.animation_timer.start(50)  # Update every 50ms
+        self.animation_timer.start(50)
         
-        # Create spinning loader text
         self.update_animation()
     
     def update_animation(self):
         """Update the loading animation."""
-        # Simple rotating text animation
         chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
         char_index = (self.rotation_angle // 5) % len(chars)
         
-        # Set text directly without HTML styling
         self.animation_label.setText(chars[char_index])
         self.animation_label.setStyleSheet("""
             QLabel {
@@ -136,7 +127,6 @@ class LoadingWidget(QWidget):
         if current_cv:
             self.current_cv_label.setText(f"Processing: {current_cv}")
         
-        # Update status
         if current == 0:
             self.status_label.setText("Starting search...")
         elif current == total:
