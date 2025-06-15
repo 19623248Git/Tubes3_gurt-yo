@@ -112,7 +112,8 @@ class SummaryWindow(QWidget):
         """)
         summary_layout.addWidget(summary_title)
         
-        summary_text = "A highly motivated and skilled individual with a passion for technology and innovation."  # Dummy data
+        ### SUMMARY ###
+        summary_text = details.get('summary', 'Summary not found.')
         summary_label = QLabel(summary_text)
         summary_label.setWordWrap(True)
         summary_label.setStyleSheet("color: #636e72; line-height: 1.5;")
@@ -121,21 +122,19 @@ class SummaryWindow(QWidget):
         main_layout.addWidget(summary_frame)
 
         ### Skills ###
-        skills_frame = self.create_section("Skills", ["Python", "PySide6", "SQL"])
+        skills_text = details.get('skills', 'Skills not found.')
+        skills_list = [skill.strip() for skill in skills_text.split('\n') if skill.strip()]
+        skills_frame = self.create_section("Skills", skills_list)
         main_layout.addWidget(skills_frame)
 
         ### Job History ###
-        job_history_frame = self.create_section(
-            "Professional Experience",
-            ["<b>Chief Technology Officer</b><br>Company Name (2000-2004)<br>• Leading the organization's technology strategies<br>• Managing tech teams and implementing innovative solutions"]
-        )
+        experience_text = details.get('experience', 'Experience not found.')
+        job_history_frame = self.create_section("Professional Experience", [experience_text])
         main_layout.addWidget(job_history_frame)
 
         ### Education History ###
-        education_frame = self.create_section(
-            "Education",
-            ["<b>Bachelor of Informatics Engineering</b><br>Institut Teknologi Bandung (2022-2026)<br>• Notable coursework in Software Engineering, Data Structures, and Algorithms"]
-        )
+        education_text = details.get('education', 'Education not found.')
+        education_frame = self.create_section("Education", [education_text])
         main_layout.addWidget(education_frame)
 
         main_layout.addStretch()
