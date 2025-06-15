@@ -42,6 +42,7 @@ def extract_section_by_pattern(text, target_patterns, all_stop_patterns):
             absolute_pos = start_pos + 1 + next_section_pos
             end_pos = min(end_pos, absolute_pos)
 
+    # Extract the text from after the header line to the start of the next section
     section_header_match = re.search(r'.*', text[start_pos:])
     if section_header_match:
         start_after_header = start_pos + section_header_match.end()
@@ -65,14 +66,16 @@ def extract_all_details(text):
             r'personal\s+statement'
         ],
         'skills': [
-            r'(?:technical\s+)?skills?',
-            r'(?:core\s+)?(?:competencies|qualifications)',
-            r'areas?\s+of\s+expertise',
-            r'skill\s+highlights?',
-            r'core\s+strengths?',
-            r'(?:technical\s+)?abilities',
-            r'technologies',
-            r'key\s+skills?'
+            r'core\s+qualifications\b',
+            r'(?:technical\s+)?skills?\b',
+            r'(?:core\s+)?(?:competencies|qualifications)\b',
+            r'areas?\s+of\s+expertise\b',
+            r'skill\s+highlights?\b',
+            r'core\s+strengths?\b',
+            r'(?:technical\s+)?abilities\b',
+            r'technologies\b',
+            r'key\s+skills?\b',
+            r'technical\s+(?:skills?|competencies)\b'
         ],
         'experience': [
             r'(?:professional\s+|work\s+)?experience',
@@ -104,14 +107,16 @@ def extract_all_details(text):
         r'personal\s+statement',
         
         # Skills variations
-        r'(?:technical\s+)?skills?',
-        r'(?:core\s+)?(?:competencies|qualifications)',
-        r'areas?\s+of\s+expertise',
-        r'skill\s+highlights?',
-        r'core\s+strengths?',
-        r'(?:technical\s+)?abilities',
-        r'technologies',
-        r'key\s+skills?',
+        r'core\s+qualifications\b',
+        r'(?:technical\s+)?skills?\b',
+        r'(?:core\s+)?(?:competencies|qualifications)\b',
+        r'areas?\s+of\s+expertise\b',
+        r'skill\s+highlights?\b',
+        r'core\s+strengths?\b',
+        r'(?:technical\s+)?abilities\b',
+        r'technologies\b',
+        r'key\s+skills?\b',
+        r'technical\s+(?:skills?|competencies)\b',
         
         # Experience variations
         r'(?:professional\s+|work\s+)?experience',
@@ -129,7 +134,7 @@ def extract_all_details(text):
         r'academic\s+credentials',
         r'degrees?',
         
-        # Stop words
+        # Common stopping sections
         r'accomplishments?',
         r'(?:key\s+)?achievements?',
         r'highlights?',
@@ -153,13 +158,13 @@ def extract_all_details(text):
 
     return extracted_data
 
-## DEBUG ##
+# Additional utility functions for more advanced pattern matching
 def find_all_sections(text):
     """
     Find all sections in the document with their positions.
     Useful for debugging or getting an overview of document structure.
     """
-    #section header pattern
+    # Common section header pattern
     section_pattern = r'^\s*([A-Z][A-Za-z\s&]+)\s*$'
     sections = []
     
@@ -172,7 +177,6 @@ def find_all_sections(text):
     
     return sections
 
-## DEBUG ##
 def extract_custom_section(text, custom_pattern, all_stop_patterns=None):
     """
     Extract a section using a custom regex pattern.
