@@ -63,9 +63,9 @@ def extract_all_details(text):
         # Summary
         'Executive Profile', 'Summary', 'Overview', 'Profile', 'Objective', 'career overview', 'executive summary',
         # Skills
-        'Skill Highlights', 'Skills', 'Abilities', 'Technologies', 'Areas of Expertise'
+        'Skill Highlights', 'Skills', 'Abilities', 'Technologies', 'Areas of Expertise',
         # Experience
-        'Professional Experience', 'Experience', 'Work History', 'Employment History', 'Work experience', 'Teaching experience'
+        'Professional Experience', 'Experience', 'Work History', 'Employment History', 'Work experience', 'Teaching experience',
         # Education
         'Education', 'Education and Training',
         # Stop words
