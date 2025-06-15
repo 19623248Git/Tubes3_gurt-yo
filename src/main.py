@@ -204,9 +204,12 @@ class CVAnalyzerApp(QMainWindow):
         self.kmp_radio.setStyleSheet("color: #2d3436;")
         self.bm_radio = QRadioButton("BM")
         self.bm_radio.setStyleSheet("color: #2d3436;")
+        self.ac_radio = QRadioButton("AC")
+        self.ac_radio.setStyleSheet("color: #2d3436;")
         self.kmp_radio.setChecked(True)
         algorithm_layout.addWidget(self.kmp_radio)
         algorithm_layout.addWidget(self.bm_radio)
+        algorithm_layout.addWidget(self.ac_radio)
         search_layout.addRow(QLabel("Search Algorithm:"), algorithm_layout)
 
         # Top Matches selector
@@ -367,8 +370,21 @@ class CVAnalyzerApp(QMainWindow):
             self.results_summary_label.setText("Please load the database first.")
             return
         
-        keywords = [kw.strip().lower() for kw in keywords_text.split(',') if kw.strip()]
-        algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
+        # Determine which algorithm to use
+        if self.kmp_radio.isChecked():
+            algorithm = "kmp"
+        elif self.bm_radio.isChecked():
+            algorithm = "bm"
+        else:
+            algorithm = "ac"
+        
+        keywords = None
+
+        if algorithm == "ac":
+            keywords = keywords_text
+        else:
+            keywords = [kw.strip().lower() for kw in keywords_text.split(',') if kw.strip()]
+
         top_n = self.top_matches_spinbox.value()
         
         self.show_loading_widget()
@@ -377,6 +393,7 @@ class CVAnalyzerApp(QMainWindow):
         self.keywords_input.setEnabled(False)
         self.kmp_radio.setEnabled(False)
         self.bm_radio.setEnabled(False)
+        self.ac_radio.setEnabled(False)
         self.top_matches_spinbox.setEnabled(False)
         
         self.search_worker = SearchWorker(self.db, self.search_engine, keywords, algorithm, top_n)
@@ -492,6 +509,7 @@ class CVAnalyzerApp(QMainWindow):
         self.keywords_input.setEnabled(True)
         self.kmp_radio.setEnabled(True)
         self.bm_radio.setEnabled(True)
+        self.ac_radio.setEnabled(True)
         self.top_matches_spinbox.setEnabled(True)
         
         if self.loading_widget:

@@ -14,10 +14,18 @@ class SearchWorker(QThread):
         super().__init__()
         self.db = db
         self.search_engine = search_engine
-        self.keywords = [k for k in keywords if k and k.strip()]
         self.algorithm = algorithm
         self.top_n = top_n
         self._is_cancelled = False
+
+        if self.algorithm == 'ac':
+            # For AC, we expect the raw, comma-separated string.
+            # The ACStrategy itself will handle parsing it.
+            self.keywords = keywords 
+        else:
+            # For KMP/BM, 'keywords' is already a list from main.py
+            # We just need to assign it.
+            self.keywords = [k for k in keywords if k and k.strip()]
     
     def cancel(self):
         """Cancel the search operation."""
@@ -63,55 +71,98 @@ class SearchWorker(QThread):
                     if not hasattr(cv_extractor, 'get_cleaned_text'):
                         print(f"ExtractCV failed for {cv_path}")
                         continue
-                        
+                    
                     matched_keywords = {}
                     cv_has_exact_matches = False
-                    
-                    for keyword in self.keywords:
-                        if self._is_cancelled:
-                            return
+
+                    if self.algorithm == 'ac':
+                        # Call AC search ONCE with all keywords
+                        ac_strategy = self.search_engine.strategies['ac']
+                        total_count = ac_strategy.search(cv_extractor, self.keywords)
                         
-                        try:
-                            # Time exact search
-                            exact_start_time = time.time()
-                            
-                            # Try exact search first (KMP/BM)
-                            if self.algorithm == 'kmp':
-                                exact_count = self.search_engine.strategies['kmp'].search(cv_extractor, keyword)
-                            else:  # BM
-                                exact_count = self.search_engine.strategies['bm'].search(cv_extractor, keyword)
-                            
-                            exact_end_time = time.time()
-                            exact_total_time += (exact_end_time - exact_start_time)
-                            
-                            if exact_count > 0:
-                                # Store with match type information
+                        exact_end_time = time.time()
+                        exact_total_time += (exact_end_time - exact_start_time)
+
+                        if total_count > 0:
+                            cv_has_exact_matches = True
+                            exact_matches_found += total_count
+                            # Get detailed results from the side-channel property
+                            ac_details = ac_strategy.last_results
+                            print(ac_details)
+                            for keyword, indices in ac_details.items():
                                 matched_keywords[keyword] = {
-                                    'count': exact_count,
+                                    'count': len(indices),
                                     'type': 'exact'
                                 }
-                                exact_matches_found += exact_count
-                                cv_has_exact_matches = True
-                            else:
-                                # If no exact matches, try fuzzy search
+                        else:
+                            # If AC finds no exact matches, perform fuzzy search for each keyword
+                            fuzzy_cvs_scanned += 1
+                            individual_keywords = [k.strip() for k in self.keywords.split(',') if k.strip()]
+                            for keyword in individual_keywords:
+                                if self._is_cancelled:
+                                    return
+                                
                                 fuzzy_start_time = time.time()
-                                
                                 fuzzy_count = self.search_engine.strategies['fuzzy'].search(cv_extractor, keyword)
-                                
                                 fuzzy_end_time = time.time()
                                 fuzzy_total_time += (fuzzy_end_time - fuzzy_start_time)
-                                
+
                                 if fuzzy_count > 0:
-                                    # Store with match type information
                                     matched_keywords[keyword] = {
                                         'count': fuzzy_count,
                                         'type': 'fuzzy'
                                     }
                                     fuzzy_matches_found += fuzzy_count
+
+                    else:
+                        for keyword in self.keywords:
+                            if self._is_cancelled:
+                                return
+                            
+                            try:
+                                # Time exact search
+                                exact_start_time = time.time()
+                                
+                                # Try exact search first (KMP/BM)
+                                if self.algorithm == 'kmp':
+                                    exact_count = self.search_engine.strategies['kmp'].search(cv_extractor, keyword)
+                                elif self.algorithm == 'bm':  # BM
+                                    exact_count = self.search_engine.strategies['bm'].search(cv_extractor, keyword)
+                                else:
+                                    raise ValueError(f"Unsupported algorithm: {self.algorithm}")
+                                
+                                exact_end_time = time.time()
+                                exact_total_time += (exact_end_time - exact_start_time)
+                                
+                                if exact_count > 0:
+                                    # Store with match type information
+                                    matched_keywords[keyword] = {
+                                        'count': exact_count,
+                                        'type': 'exact'
+                                    }
+                                    exact_matches_found += exact_count
+                                    cv_has_exact_matches = True
+                                
+                                else:
+                                    # If no exact matches, try fuzzy search
+                                    fuzzy_start_time = time.time()
                                     
-                        except Exception as search_error:
-                            print(f"Search error for keyword '{keyword}' in {cv_path}: {search_error}")
-                            continue
+                                    fuzzy_count = self.search_engine.strategies['fuzzy'].search(cv_extractor, keyword)
+                                    
+                                    fuzzy_end_time = time.time()
+                                    fuzzy_total_time += (fuzzy_end_time - fuzzy_start_time)
+                                    
+                                    if fuzzy_count > 0:
+                                        # Store with match type information
+                                        matched_keywords[keyword] = {
+                                            'count': fuzzy_count,
+                                            'type': 'fuzzy'
+                                        }
+                                        fuzzy_matches_found += fuzzy_count
+                                        
+                            except Exception as search_error:
+                                print(f"Search error for keyword '{keyword}' in {cv_path}: {search_error}")
+                                continue
                     
                     exact_cvs_scanned += 1
                     
