@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QRadioButton,
     QSpinBox,
-    QFileDialog,  # Add this import
-    QMessageBox,  # Add this import
+    QFileDialog,
+    QMessageBox,
 )
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
@@ -27,14 +27,19 @@ from ExtractCV import ExtractCV
 from Search.Search import Search
 from RegEx import extract_all_details
 
+from SearchWorker import SearchWorker
+from LoadingWidget import LoadingWidget
+
 class CVAnalyzerApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gurt:Yo CV Analyzer")
-        self.setGeometry(100, 100, 1000, 700)
+        self.setGeometry(100, 100, 1200, 800)
         self.db = None
-        self.config_path = "config/database.json"  # Default config path
-        self.search_engine = Search()  # Create search engine once
+        self.config_path = "config/database.json"
+        self.search_engine = Search()
+        self.search_worker = None  # Track the search worker thread
+        self.loading_widget = None  # Track loading widget
 
         # Set application-wide stylesheet
         self.setStyleSheet("""
@@ -125,7 +130,6 @@ class CVAnalyzerApp(QMainWindow):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.NoFrame)
-        # scroll_area.setStyleSheet()
         self.setCentralWidget(scroll_area)
 
         # Main widget and layout
@@ -155,10 +159,6 @@ class CVAnalyzerApp(QMainWindow):
         self.path_label.setObjectName("pathLabel")
         left_layout.addWidget(self.path_label)
         
-        # Database Controls
-        db_controls_layout = QHBoxLayout()
-        db_controls_layout.setSpacing(10)
-        
         top_bar_layout.addLayout(left_layout)
         top_bar_layout.addStretch()
         
@@ -174,7 +174,10 @@ class CVAnalyzerApp(QMainWindow):
         
         main_layout.addWidget(top_bar_frame)
 
-        ### Search Panel ###
+        content_horizontal_layout = QHBoxLayout()
+        content_horizontal_layout.setSpacing(20)
+
+        ### Search Panel (Left Side) ###
         search_panel = QFrame()
         search_panel.setStyleSheet("""
             QFrame {
@@ -183,7 +186,8 @@ class CVAnalyzerApp(QMainWindow):
                 padding: 20px;
             }
         """)
-        search_layout = QFormLayout(search_panel)
+        search_panel.setFixedWidth(400)
+        search_layout = QFormLayout(search_panel)  # Create layout only once
         search_layout.setSpacing(15)
         search_layout.setContentsMargins(20, 20, 20, 20)
 
@@ -218,6 +222,7 @@ class CVAnalyzerApp(QMainWindow):
         self.top_matches_spinbox = QSpinBox()
         self.top_matches_spinbox.setMinimum(1)
         self.top_matches_spinbox.setValue(5)
+        self.top_matches_spinbox.setButtonSymbols(QSpinBox.UpDownArrows)  # Force vertical arrows
         search_layout.addRow(QLabel("Top Matches:"), self.top_matches_spinbox)
 
         # Search Button
@@ -229,9 +234,7 @@ class CVAnalyzerApp(QMainWindow):
         button_layout.addWidget(self.search_button)
         search_layout.addRow(button_layout)
 
-        main_layout.addWidget(search_panel)
-
-        ### Results Section ###
+        ### Results Section (Right Side) ###
         results_frame = QFrame()
         results_frame.setStyleSheet("""
             QFrame {
@@ -241,7 +244,47 @@ class CVAnalyzerApp(QMainWindow):
             }
         """)
         results_frame.setMinimumHeight(400)
-        main_layout.addWidget(results_frame)
+        # results_layout = QVBoxLayout(results_frame)  # Create layout only once
+        # results_layout.setContentsMargins(20, 20, 20, 20)
+        # results_layout.setSpacing(0)
+
+        # # Results title
+        # results_title = QLabel("Search Results")
+        # results_title.setStyleSheet("""
+        #     font-size: 24px;
+        #     font-weight: bold;
+        #     color: #2d3436;
+        #     margin-bottom: 5px;
+        # """)
+        # results_layout.addWidget(results_title)
+
+        # # Summary of search performance
+        # self.results_summary_label = QLabel("Search results will appear here.")
+        # self.results_summary_label.setAlignment(Qt.AlignCenter)
+        # self.results_summary_label.setStyleSheet("""
+        #     color: #636e72;
+        #     font-size: 16px;
+        #     padding: 5px;
+        # """)
+        # results_layout.addWidget(self.results_summary_label)
+
+        # # Area for CV cards or loading widget
+        # self.content_scroll_area = QScrollArea()
+        # self.content_scroll_area.setWidgetResizable(True)
+        # results_layout.addWidget(self.content_scroll_area)
+
+        # self.results_container = QWidget()
+        # self.results_container.setObjectName("cardContainer")
+        # self.results_grid_layout = QVBoxLayout(self.results_container)
+        # self.results_grid_layout.setContentsMargins(0, 0, 0, 0)
+        # self.results_grid_layout.setSpacing(1)
+        # self.content_scroll_area.setWidget(self.results_container)
+
+        # Add panels to horizontal layout
+        content_horizontal_layout.addWidget(search_panel)
+        content_horizontal_layout.addWidget(results_frame)
+        main_layout.addLayout(content_horizontal_layout)
+        
         results_layout = QVBoxLayout(results_frame)
         results_layout.setContentsMargins(20, 20, 20, 20)
         results_layout.setSpacing(0)
@@ -266,23 +309,24 @@ class CVAnalyzerApp(QMainWindow):
         """)
         results_layout.addWidget(self.results_summary_label)
 
-        # Area for CV cards
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        results_layout.addWidget(scroll_area)
+        # Area for CV cards or loading widget
+        self.content_scroll_area = QScrollArea()
+        self.content_scroll_area.setWidgetResizable(True)
+        results_layout.addWidget(self.content_scroll_area)
 
         self.results_container = QWidget()
         self.results_container.setObjectName("cardContainer")
         self.results_grid_layout = QVBoxLayout(self.results_container)
         self.results_grid_layout.setContentsMargins(0, 0, 0, 0)
         self.results_grid_layout.setSpacing(1)
-        scroll_area.setWidget(self.results_container)
+        self.content_scroll_area.setWidget(self.results_container)
         self.summary_window = None
 
-        # Connect buttons to their handlers (only once)
+        # Connect buttons to their handlers
         self.search_button.clicked.connect(self.perform_search)
 
     def set_database_path(self):
+        # [Previous implementation remains the same]
         try:
             file_path, _ = QFileDialog.getOpenFileName(
                 self,
@@ -290,13 +334,11 @@ class CVAnalyzerApp(QMainWindow):
                 "",
                 "JSON Files (*.json)"
             )
-            if file_path:                # Update the config path
+            if file_path:
                 self.config_path = file_path
-                # Test if the config file is valid by trying to load it
                 with open(file_path, 'r') as f:
-                    json.load(f)  # This will raise an error if JSON is invalid
+                    json.load(f)
                 
-                # Update the path display
                 self.path_label.setText(f"Config: {file_path}")
                 self.status_label.setText("Database Path Updated")
                 self.status_label.setProperty("status", "success")
@@ -318,12 +360,13 @@ class CVAnalyzerApp(QMainWindow):
 
     def load_database(self):
         try:
-            # Create new database instance with current config path
             self.db = Database(self.config_path)
             
-            # Try to establish connection
             if self.db.create_connection():
-                self.status_label.setText("Database Connected")
+                all_cvs = self.db.get_all_cv_data()
+                total_cvs = len(all_cvs)
+                
+                self.status_label.setText(f"Database Connected ({total_cvs} CVs)")
                 self.status_label.setProperty("status", "success")
                 self.status_label.style().unpolish(self.status_label)
                 self.status_label.style().polish(self.status_label)
@@ -340,73 +383,91 @@ class CVAnalyzerApp(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to load database: {str(e)}")
 
     def perform_search(self):
-        ## Clear Cards ##
-        for i in reversed(range(self.results_grid_layout.count())):
-            widget = self.results_grid_layout.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
-
+        """Start the search in a separate thread."""
+        # Validate inputs
         keywords_text = self.keywords_input.text()
         if not keywords_text:
             self.results_summary_label.setText("Please enter at least one keyword.")
             return
-        keywords = [kw.strip().lower() for kw in keywords_text.split(',') if kw.strip()]
-        algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
-        top_n = self.top_matches_spinbox.value()
-
+        
         if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
         
-        self.results_summary_label.setText(f"Searching {algorithm.upper()} for '{keywords}'...")
-        QApplication.processEvents() # Allow GUI to update
-
-        start_time = time.time()
-        all_applications = self.db.get_all_cv_data()
-        results = []
+        keywords = [kw.strip().lower() for kw in keywords_text.split(',') if kw.strip()]
+        algorithm = "kmp" if self.kmp_radio.isChecked() else "bm"
+        top_n = self.top_matches_spinbox.value()
         
-        for app_data in all_applications:
-            cv_path = app_data['cv_path']
-            cv_extractor = ExtractCV(cv_path) 
-            
-            matched_keywords = {}
-            for keyword in keywords:
-                count = self.search_engine._search(algorithm, cv_extractor, keyword)
-                if count > 0:
-                    matched_keywords[keyword] = count
-            
-            if matched_keywords:
-                result_entry = {
-                    "detail_id": app_data['detail_id'],
-                    "applicant_id": app_data['applicant_id'],
-                    "name": f"{app_data['first_name']} {app_data['last_name']}",
-                    "application_role": app_data['application_role'],
-                    "cv_path": cv_path,
-                    "matched_keywords": matched_keywords
-                }
-                results.append(result_entry)
+        self.show_loading_widget()
         
-        runtime_ms = (time.time() - start_time) * 1000
-
-        # Sort results and get top N
-        results.sort(key=lambda x: sum(x['matched_keywords'].values()), reverse=True)
-        final_results = results[:top_n]
+        self.search_button.setEnabled(False)
+        self.keywords_input.setEnabled(False)
+        self.kmp_radio.setEnabled(False)
+        self.bm_radio.setEnabled(False)
+        self.top_matches_spinbox.setEnabled(False)
         
-        self.results_summary_label.setText(
-            f"Exact Match: Scanned {len(all_applications)} CVs in {runtime_ms:.2f} ms. Found {len(results)} relevant CV(s)."
-        )
-
-        # Clear previous results
+        self.search_worker = SearchWorker(self.db, self.search_engine, keywords, algorithm, top_n)
+        self.search_worker.progress_updated.connect(self.on_search_progress)
+        self.search_worker.search_completed.connect(self.on_search_completed)
+        self.search_worker.error_occurred.connect(self.on_search_error)
+        self.search_worker.finished.connect(self.on_search_finished)
+        
+        self.loading_widget.cancel_button.clicked.connect(self.cancel_search)
+        
+        self.search_worker.start()
+    
+    def show_loading_widget(self):
+        """Show the loading widget in the results area."""
+        self.clear_results_area()
+        
+        self.loading_widget = LoadingWidget()
+        self.results_grid_layout.addWidget(self.loading_widget)
+        
+        self.results_summary_label.setText("Executing search...")
+    
+    def clear_results_area(self):
+        """Clear all widgets from the results area."""
         for i in reversed(range(self.results_grid_layout.count())):
             widget = self.results_grid_layout.itemAt(i).widget()
             if widget:
                 widget.setParent(None)
+    
+    def cancel_search(self):
+        """Cancel the ongoing search."""
+        if self.search_worker and self.search_worker.isRunning():
+            self.search_worker.cancel()
+            self.search_worker.wait(3000)
+            
+            if self.search_worker.isRunning():
+                self.search_worker.terminate()
+            
+            self.results_summary_label.setText("Search cancelled by user.")
+    
+    def on_search_progress(self, current, total, current_cv):
+        """Handle search progress updates."""
+        if self.loading_widget:
+            self.loading_widget.update_progress(current, total, current_cv)
+    
+    def on_search_completed(self, results, runtime_ms, total_scanned, total_found):
+        """Handle search completion."""
+        self.results_summary_label.setText(
+            f"Search completed: Scanned {total_scanned} CVs in {runtime_ms:.2f} ms. Found {total_found} relevant CV(s)."
+        )
         
-        if not final_results:
-            self.results_summary_label.setText("No matches found.")
+        self.clear_results_area()
+        
+        if not results:
+            no_results_label = QLabel("No matches found.")
+            no_results_label.setAlignment(Qt.AlignCenter)
+            no_results_label.setStyleSheet("""
+                font-size: 18px;
+                padding: 50px;
+            """)
+            self.results_grid_layout.addWidget(no_results_label)
             return
-
-        for result in final_results:
+        
+        # Display results
+        for result in results:
             card = self.create_cv_card(
                 result["detail_id"],
                 result["applicant_id"],
@@ -416,8 +477,39 @@ class CVAnalyzerApp(QMainWindow):
                 result["matched_keywords"]
             )
             self.results_grid_layout.addWidget(card)
+    
+    def on_search_error(self, error_message):
+        """Handle search errors."""
+        self.results_summary_label.setText(f"Search error: {error_message}")
+        self.clear_results_area()
+        
+        error_label = QLabel(f"An error occurred during search:\n{error_message}")
+        error_label.setAlignment(Qt.AlignCenter)
+        error_label.setStyleSheet("""
+            font-size: 16px;
+            color: #e74c3c;
+            padding: 50px;
+        """)
+        self.results_grid_layout.addWidget(error_label)
+    
+    def on_search_finished(self):
+        """Handle search thread cleanup."""
+        self.search_button.setEnabled(True)
+        self.keywords_input.setEnabled(True)
+        self.kmp_radio.setEnabled(True)
+        self.bm_radio.setEnabled(True)
+        self.top_matches_spinbox.setEnabled(True)
+        
+        if self.loading_widget:
+            self.loading_widget.stop_animation()
+            self.loading_widget = None
+        
+        if self.search_worker:
+            self.search_worker.deleteLater()
+            self.search_worker = None
 
     def create_cv_card(self, detail_id, applicant_id, name, application_role, cv_path, matched_keywords_data):
+        # [Previous implementation remains the same]
         card = QFrame()
         card.setFrameShape(QFrame.Box)
         card.setLineWidth(1)
@@ -454,7 +546,8 @@ class CVAnalyzerApp(QMainWindow):
 
         return card
 
-    def show_summary(self, detail_id): 
+    def show_summary(self, detail_id):
+        # [Previous implementation remains the same]
         if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
@@ -466,9 +559,9 @@ class CVAnalyzerApp(QMainWindow):
             if cv_path:
                 extractor = ExtractCV(cv_path)
                 extractor.extract()
-                full_text = extractor.get_raw_text() # Use the raw extracted text for Regex
+                full_text = extractor.get_raw_text()
                 regex_details = extract_all_details(full_text)
-                print(f"Extracted details: {regex_details}") # DEBUG
+                print(f"Extracted details: {regex_details}")
                 details.update(regex_details)
 
             self.summary_window = SummaryWindow(details)
@@ -477,16 +570,27 @@ class CVAnalyzerApp(QMainWindow):
             print(f"No details found for application with Detail ID {detail_id}.")
 
     def view_cv(self, name, cv_path):
+        # [Previous implementation remains the same]
         if not os.path.exists(cv_path):
             self.results_summary_label.setText(f"CV file not found: {cv_path}")
             return
 
-        # Open the CV file using the default application
         try:
             absolute_path = os.path.abspath(cv_path)
-            os.startfile(absolute_path)  # For Windows
+            os.startfile(absolute_path)
         except Exception as e:
             self.results_summary_label.setText(f"Error opening CV: {str(e)}")
+
+    def closeEvent(self, event):
+        """Handle application close event."""
+        # Cancel any running search
+        if self.search_worker and self.search_worker.isRunning():
+            self.search_worker.cancel()
+            self.search_worker.wait(2000)
+            if self.search_worker.isRunning():
+                self.search_worker.terminate()
+        
+        event.accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
