@@ -6,7 +6,6 @@ import os
 class SearchWorker(QThread):
     """Worker thread for performing CV search operations."""
     
-    # Signals for communication with main thread
     progress_updated = Signal(int, int, str)
     search_completed = Signal(list, float, int, int)
     error_occurred = Signal(str)
@@ -37,7 +36,6 @@ class SearchWorker(QThread):
             for i, app_data in enumerate(all_applications):
                 # print(f"Processing CV {i+1}/{total_cvs}: {app_data}")
                 
-                # Check if cancelled
                 if self._is_cancelled:
                     return
                 
@@ -46,12 +44,10 @@ class SearchWorker(QThread):
                 last_name = app_data.get('last_name', 'User')
                 current_name = f"{first_name} {last_name}"
                 
-                # Check if cv_path exists and is valid
                 if not cv_path or not os.path.exists(cv_path):
                     print(f"Skipping invalid CV path: {cv_path}")
                     continue
                 
-                # Emit progress update
                 self.progress_updated.emit(i + 1, total_cvs, current_name)
                 
                 try:
@@ -90,14 +86,12 @@ class SearchWorker(QThread):
                     continue
                 
                 except Exception as e:
-                    # Log individual CV processing errors but continue
                     print(f"Error processing CV {cv_path}: {str(e)}")
                     continue
             
             if not self._is_cancelled:
                 runtime_ms = (time.time() - start_time) * 1000
                 
-                # Sort results and get top N
                 results.sort(key=lambda x: sum(x['matched_keywords'].values()), reverse=True)
                 final_results = results[:self.top_n]
                 

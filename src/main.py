@@ -38,10 +38,9 @@ class CVAnalyzerApp(QMainWindow):
         self.db = None
         self.config_path = "config/database.json"
         self.search_engine = Search()
-        self.search_worker = None  # Track the search worker thread
-        self.loading_widget = None  # Track loading widget
+        self.search_worker = None
+        self.loading_widget = None
 
-        # Set application-wide stylesheet
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f5f6fa;
@@ -187,7 +186,7 @@ class CVAnalyzerApp(QMainWindow):
             }
         """)
         search_panel.setFixedWidth(400)
-        search_layout = QFormLayout(search_panel)  # Create layout only once
+        search_layout = QFormLayout(search_panel)
         search_layout.setSpacing(15)
         search_layout.setContentsMargins(20, 20, 20, 20)
 
@@ -244,41 +243,6 @@ class CVAnalyzerApp(QMainWindow):
             }
         """)
         results_frame.setMinimumHeight(400)
-        # results_layout = QVBoxLayout(results_frame)  # Create layout only once
-        # results_layout.setContentsMargins(20, 20, 20, 20)
-        # results_layout.setSpacing(0)
-
-        # # Results title
-        # results_title = QLabel("Search Results")
-        # results_title.setStyleSheet("""
-        #     font-size: 24px;
-        #     font-weight: bold;
-        #     color: #2d3436;
-        #     margin-bottom: 5px;
-        # """)
-        # results_layout.addWidget(results_title)
-
-        # # Summary of search performance
-        # self.results_summary_label = QLabel("Search results will appear here.")
-        # self.results_summary_label.setAlignment(Qt.AlignCenter)
-        # self.results_summary_label.setStyleSheet("""
-        #     color: #636e72;
-        #     font-size: 16px;
-        #     padding: 5px;
-        # """)
-        # results_layout.addWidget(self.results_summary_label)
-
-        # # Area for CV cards or loading widget
-        # self.content_scroll_area = QScrollArea()
-        # self.content_scroll_area.setWidgetResizable(True)
-        # results_layout.addWidget(self.content_scroll_area)
-
-        # self.results_container = QWidget()
-        # self.results_container.setObjectName("cardContainer")
-        # self.results_grid_layout = QVBoxLayout(self.results_container)
-        # self.results_grid_layout.setContentsMargins(0, 0, 0, 0)
-        # self.results_grid_layout.setSpacing(1)
-        # self.content_scroll_area.setWidget(self.results_container)
 
         # Add panels to horizontal layout
         content_horizontal_layout.addWidget(search_panel)
@@ -322,11 +286,9 @@ class CVAnalyzerApp(QMainWindow):
         self.content_scroll_area.setWidget(self.results_container)
         self.summary_window = None
 
-        # Connect buttons to their handlers
         self.search_button.clicked.connect(self.perform_search)
 
     def set_database_path(self):
-        # [Previous implementation remains the same]
         try:
             file_path, _ = QFileDialog.getOpenFileName(
                 self,
@@ -466,7 +428,6 @@ class CVAnalyzerApp(QMainWindow):
             self.results_grid_layout.addWidget(no_results_label)
             return
         
-        # Display results
         for result in results:
             card = self.create_cv_card(
                 result["detail_id"],
@@ -509,7 +470,6 @@ class CVAnalyzerApp(QMainWindow):
             self.search_worker = None
 
     def create_cv_card(self, detail_id, applicant_id, name, application_role, cv_path, matched_keywords_data):
-        # [Previous implementation remains the same]
         card = QFrame()
         card.setFrameShape(QFrame.Box)
         card.setLineWidth(1)
@@ -547,7 +507,6 @@ class CVAnalyzerApp(QMainWindow):
         return card
 
     def show_summary(self, detail_id):
-        # [Previous implementation remains the same]
         if not self.db:
             self.results_summary_label.setText("Please load the database first.")
             return
@@ -570,7 +529,6 @@ class CVAnalyzerApp(QMainWindow):
             print(f"No details found for application with Detail ID {detail_id}.")
 
     def view_cv(self, name, cv_path):
-        # [Previous implementation remains the same]
         if not os.path.exists(cv_path):
             self.results_summary_label.setText(f"CV file not found: {cv_path}")
             return
@@ -583,7 +541,6 @@ class CVAnalyzerApp(QMainWindow):
 
     def closeEvent(self, event):
         """Handle application close event."""
-        # Cancel any running search
         if self.search_worker and self.search_worker.isRunning():
             self.search_worker.cancel()
             self.search_worker.wait(2000)

@@ -197,7 +197,7 @@ def test_various_patterns_for_consistency():
     print(f"\nSuccessfully compared {len(test_patterns)} patterns.")
 
 # ======================================================================
-#  CASE 5: test_fuzzy_fallback_finds_matches - SHOULD FAIL NOW
+#  CASE 5: test_fuzzy_fallback_finds_matches
 # ======================================================================
 def test_fuzzy_fallback_finds_matches():
     """Test that fuzzy fallback actually finds approximate matches."""
@@ -222,7 +222,7 @@ def test_fuzzy_fallback_finds_matches():
         assert result > 0, f"Fuzzy search should find matches for typo '{pattern}' when implemented"
 
 # ======================================================================
-#  CASE 6: test_fuzzy_insufficient_matches_supplement - SHOULD FAIL NOW
+#  CASE 6: test_fuzzy_insufficient_matches_supplement
 # ======================================================================
 def test_fuzzy_insufficient_matches_supplement():
     """
@@ -248,7 +248,7 @@ def test_fuzzy_insufficient_matches_supplement():
     assert result >= 0, f"Should find matches (exact or fuzzy) when fuzzy is implemented, got {result}"
 
 # ======================================================================
-#  CASE 7: test_fuzzy_similarity_matching - SHOULD FAIL NOW
+#  CASE 7: test_fuzzy_similarity_matching
 # ======================================================================
 def test_fuzzy_similarity_matching():
     """
