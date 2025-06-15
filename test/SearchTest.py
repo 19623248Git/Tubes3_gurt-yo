@@ -196,6 +196,88 @@ def test_various_patterns_for_consistency():
         assert kmp_result == bm_result, f"Inconsistent for '{pattern}': KMP={kmp_result}, BM={bm_result}"
     print(f"\nSuccessfully compared {len(test_patterns)} patterns.")
 
+# ======================================================================
+#  CASE 5: test_fuzzy_fallback_finds_matches - SHOULD FAIL NOW
+# ======================================================================
+def test_fuzzy_fallback_finds_matches():
+    """Test that fuzzy fallback actually finds approximate matches."""
+    search_engine = Search()
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
+    
+    # Test with typos that should trigger fuzzy search and find matches
+    typo_patterns = [
+        "accountent",   # Should match "accountant"
+        "experiance",   # Should match "experience"
+        "mangement",    # Should match "management"
+    ]
+    
+    for pattern in typo_patterns:
+        print(f"Testing fuzzy search for typo: '{pattern}'")
+        result = search_engine._search('kmp', test_text, pattern)  # Will fallback to fuzzy
+        
+        print(f"Result for '{pattern}': {result}")
+        
+        # This should FAIL now (returns -2), PASS when fuzzy is implemented
+        print_assertion("result > 0")
+        assert result > 0, f"Fuzzy search should find matches for typo '{pattern}' when implemented"
+
+# ======================================================================
+#  CASE 6: test_fuzzy_insufficient_matches_supplement - SHOULD FAIL NOW
+# ======================================================================
+def test_fuzzy_insufficient_matches_supplement():
+    """
+    Test that fuzzy strategy supplements when exact search finds insufficient matches.
+    """
+    search_engine = Search()
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
+    
+    print("Testing fuzzy supplementing insufficient exact matches...")
+    
+    # Use a pattern that likely has few exact matches
+    rare_pattern = "xyz"
+    
+    result = search_engine._search('kmp', test_text, rare_pattern)
+    print(f"Search result for rare pattern '{rare_pattern}': {result}")
+    
+    # When fuzzy is implemented, it should either:
+    # 1. Find exact matches (result >= 0), OR
+    # 2. Find fuzzy matches if no exact matches (result > 0)
+    # Currently returns -2, so this will FAIL
+    
+    print_assertion("result >= 0")
+    assert result >= 0, f"Should find matches (exact or fuzzy) when fuzzy is implemented, got {result}"
+
+# ======================================================================
+#  CASE 7: test_fuzzy_similarity_matching - SHOULD FAIL NOW
+# ======================================================================
+def test_fuzzy_similarity_matching():
+    """
+    Test that fuzzy strategy finds similar words with acceptable similarity.
+    """
+    search_engine = Search()
+    test_text = ExtractCV("data/ACCOUNTANT/10554236.pdf")
+    
+    print("Testing fuzzy similarity matching...")
+    
+    similarity_tests = [
+        ("finacial", "financial"),    # Missing 'n'
+        ("busines", "business"),      # Missing 's'
+        ("acounting", "accounting"),  # Missing 'c'
+        ("magement", "management"),   # Missing 'n'
+    ]
+    
+    for typo, correct in similarity_tests:
+        print(f"Testing similarity: '{typo}' should match '{correct}'")
+        result = search_engine._search('kmp', test_text, typo)
+        
+        print(f"Result for '{typo}': {result}")
+        
+        print_assertion("result > 0")
+        assert result > 0, f"Fuzzy search should find matches for '{typo}' (similar to '{correct}') when implemented"
+
+
+
+
 # --- Main Execution Block ---
 
 # ======================================================================
@@ -207,5 +289,9 @@ if __name__ == "__main__":
         test_non_existent_word_search,
         test_invalid_strategy_handling,
         test_various_patterns_for_consistency,
+        
+        test_fuzzy_fallback_finds_matches,
+        test_fuzzy_insufficient_matches_supplement,
+        test_fuzzy_similarity_matching,        
     ]
     run_test_suite(tests_to_run)
